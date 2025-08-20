@@ -1,0 +1,53 @@
+import './App.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { Navbar } from './components/Navbar/Navbar'
+import { HeroSection } from './components/HeroSection/HeroSection'
+import { PropertiesSection } from './components/PropertiesSection/PropertiesSection'
+import OportunitiesSection from './components/OportunitiesSection/OportunitiesSection'
+import ConnectSection from './components/ConnectSection/ConnectSection'
+import ContactSection from './components/ContactSection/ContactSection'
+import Footer from './components/Footer/Footer'
+import PageTransition from './components/PageTransition/PageTransition'
+import { InstagramProvider } from './context/InstagramContext'
+import { PropertyProvider } from './context/PropertyContext'
+import PropertiesPage from './pages/PropertiesPage/PropertiesPage'
+import PropertyDetailPage from './pages/PropertyDetailPage/PropertyDetailPage'
+import BlogPage from './pages/BlogPage/BlogPage'
+
+// Componente para la página principal
+const HomePage = () => (
+  <>
+    <HeroSection />
+    <PropertiesSection />
+    <OportunitiesSection />
+    <ContactSection />
+    <ConnectSection />
+  </>
+)
+
+function App() {
+  return (
+    <Router>
+      <InstagramProvider>
+        <PropertyProvider>
+          <div className="min-h-screen flex flex-col">
+            <Navbar />
+            <main className="flex-1">
+              <PageTransition>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/properties" element={<PropertiesPage />} />
+                  <Route path="/property/:id" element={<PropertyDetailPage />} />
+                  <Route path="/blog" element={<BlogPage />} />
+                </Routes>
+              </PageTransition>
+            </main>
+            <Footer />
+          </div>
+        </PropertyProvider>
+      </InstagramProvider>
+    </Router>
+  )
+}
+
+export default App
