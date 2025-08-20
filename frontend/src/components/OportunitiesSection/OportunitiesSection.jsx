@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import StarIcon from '../../assets/star.svg'
+import StarIcon from '../../assets/Star.svg'
 
 
 const OportunitiesSection = () => {
