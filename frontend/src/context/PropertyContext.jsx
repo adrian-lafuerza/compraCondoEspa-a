@@ -42,20 +42,23 @@ export const PropertyProvider = ({ children }) => {
 
       // Combinar filtros actuales con los nuevos
       const finalFilters = { ...filters, ...searchFilters };
-      
+
       // Obtener propiedades desde la API
       const response = await propertyService.getProperties(finalFilters);
-      
-      if (response.success && response.data) {
+
+      console.log(response);
+
+
+      if (response && response) {
         // Transformar propiedades si es necesario
-        setProperties(response.data.properties);
+        setProperties(response);
         setError(null); // Limpiar errores previos en caso de éxito
       } else {
         throw new Error(response.message || 'Error al cargar propiedades');
       }
     } catch (err) {
       console.error('Error loading properties:', err);
-      const errorMessage = err.message.includes('Error 500') 
+      const errorMessage = err.message.includes('Error 500')
         ? 'Error del servidor: No se pudieron cargar las propiedades. Por favor, inténtalo más tarde.'
         : err.message;
       setError(errorMessage);
@@ -78,8 +81,8 @@ export const PropertyProvider = ({ children }) => {
       console.log('🔍 Buscando propiedad con ID:', id);
 
       // Primero buscar en las propiedades ya cargadas
-      const existingProperty = properties.find(property => 
-        property.propertyId === id || 
+      const existingProperty = properties.find(property =>
+        property.propertyId === id ||
         property.propertyId === parseInt(id) ||
         property.id === id ||
         property.id === parseInt(id)
@@ -105,19 +108,18 @@ export const PropertyProvider = ({ children }) => {
       // Si no está en las propiedades cargadas y no se ha intentado antes, cargar todas las propiedades
       console.log('🔍 Propiedad no encontrada en cache, cargando todas las propiedades...');
       const response = await propertyService.getProperties();
-      
-      if (response.success && response.data && response.data.properties) {
-        // Transformar propiedades
-        const transformedProperties = response.data.properties.map(prop => 
+
+      if (response) {
+        const transformedProperties = response.map(prop =>
           propertyService.transformProperty(prop)
         );
-        
+
         // Actualizar el estado
         setProperties(transformedProperties);
-        
+
         // Buscar en las propiedades recién cargadas
-        const foundProperty = transformedProperties.find(property => 
-          property.propertyId === id || 
+        const foundProperty = transformedProperties.find(property =>
+          property.propertyId === id ||
           property.propertyId === parseInt(id) ||
           property.id === id ||
           property.id === parseInt(id)
@@ -130,11 +132,36 @@ export const PropertyProvider = ({ children }) => {
           return foundProperty;
         }
       }
-      
+
+      // if (response.success && response.data && response.data.properties) {
+      //   // Transformar propiedades
+      //   const transformedProperties = response.data.properties.map(prop =>
+      //     propertyService.transformProperty(prop)
+      //   );
+
+      //   // Actualizar el estado
+      //   setProperties(transformedProperties);
+
+      //   // Buscar en las propiedades recién cargadas
+      //   const foundProperty = transformedProperties.find(property =>
+      //     property.propertyId === id ||
+      //     property.propertyId === parseInt(id) ||
+      //     property.id === id ||
+      //     property.id === parseInt(id)
+      //   );
+
+      //   if (foundProperty) {
+      //     console.log('✅ Propiedad encontrada después de cargar:', foundProperty.propertyId);
+      //     setCurrentProperty(foundProperty);
+      //     setError(null);
+      //     return foundProperty;
+      //   }
+      // }
+
       throw new Error(`Propiedad con ID ${id} no encontrada`);
     } catch (err) {
       console.error('Error loading property:', err);
-      const errorMessage = err.message.includes('Error 500') 
+      const errorMessage = err.message.includes('Error 500')
         ? `Error del servidor: No se pudo cargar la propiedad. ${err.message}`
         : err.message;
       setError(errorMessage);
@@ -167,7 +194,7 @@ export const PropertyProvider = ({ children }) => {
       setHasAttemptedLoad(true);
 
       const response = await propertyService.getPropertiesByZone(zone);
-      
+
       if (response.success && response.data) {
         setProperties(response.data.properties);
         setError(null);
@@ -233,7 +260,7 @@ export const PropertyProvider = ({ children }) => {
     currentProperty,
     filters,
     hasAttemptedLoad,
-    
+
     // Acciones
     loadProperties,
     loadPropertyById,
