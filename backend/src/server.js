@@ -13,11 +13,12 @@ const corsOptions = {
     
     const allowedOrigins = [
       'http://localhost:5173', // Desarrollo local
+      'http://localhost:5174', // Desarrollo local Vite
       'http://localhost:3000', // Desarrollo local alternativo
       process.env.FRONTEND_URL, // URL de producción del frontend
       ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
     ].filter(Boolean);
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {

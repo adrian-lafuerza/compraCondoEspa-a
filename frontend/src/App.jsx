@@ -10,9 +10,11 @@ import Footer from './components/Footer/Footer'
 import PageTransition from './components/PageTransition/PageTransition'
 import { InstagramProvider } from './context/InstagramContext'
 import { PropertyProvider } from './context/PropertyContext'
+import { CampaignCacheProvider } from './context/CampaignCacheContext'
 import PropertiesPage from './pages/PropertiesPage/PropertiesPage'
 import PropertyDetailPage from './pages/PropertyDetailPage/PropertyDetailPage'
 import BlogPage from './pages/BlogPage/BlogPage'
+import CampaignDetailPage from './pages/CampaignDetailPage/CampaignDetailPage'
 
 // Componente para la página principal
 const HomePage = () => (
@@ -30,7 +32,8 @@ function App() {
     <Router>
       <InstagramProvider>
         <PropertyProvider>
-          <div className="min-h-screen flex flex-col">
+          <CampaignCacheProvider>
+            <div className="min-h-screen flex flex-col">
             <Navbar />
             <main className="flex-1">
               <PageTransition>
@@ -39,11 +42,13 @@ function App() {
                   <Route path="/properties" element={<PropertiesPage />} />
                   <Route path="/property/:id" element={<PropertyDetailPage />} />
                   <Route path="/blog" element={<BlogPage />} />
+                  <Route path="/campaign/:campaignId" element={<CampaignDetailPage />} />
                 </Routes>
               </PageTransition>
             </main>
             <Footer />
-          </div>
+            </div>
+          </CampaignCacheProvider>
         </PropertyProvider>
       </InstagramProvider>
     </Router>

@@ -108,7 +108,7 @@ export const PropertyProvider = ({ children }) => {
       // Si no está en las propiedades cargadas y no se ha intentado antes, cargar todas las propiedades
       console.log('🔍 Propiedad no encontrada en cache, cargando todas las propiedades...');
       const response = await propertyService.getProperties();
-
+    
       if (response) {
         const transformedProperties = response.map(prop =>
           propertyService.transformProperty(prop)
@@ -177,10 +177,43 @@ export const PropertyProvider = ({ children }) => {
    * @param {string} location - Ubicación a buscar
    */
   const searchByLocation = useCallback(async (location) => {
-    const searchFilters = { ...filters, location };
-    setFilters(searchFilters);
-    setHasAttemptedLoad(false); // Reset para permitir nueva búsqueda
-    await loadProperties(searchFilters);
+    try {
+      console.log('PropertyContext: searchByLocation called with:', location);
+      setLoading(true);
+      setError(null);
+      setHasAttemptedLoad(true);
+      
+      // No limpiar propiedades anteriores hasta que lleguen las nuevas
+      // setProperties([]);
+
+      // Si la ubicación es Madrid, usar Idealista
+      if (location && location.toLowerCase() === 'madrid') {
+        console.log('PropertyContext: Searching Madrid properties using Idealista');
+        const response = await propertyService.getPropertiesByMadrid();
+        console.log('PropertyContext: Madrid API response:', response);
+        
+        if (response && response.success && response.data && response.data.properties) {
+          console.log('PropertyContext: Setting Madrid properties:', response.data.properties.length);
+          setProperties(response.data.properties);
+          setError(null);
+        } else {
+          console.error('PropertyContext: Invalid Madrid response:', response);
+          throw new Error(response.message || 'Error al cargar propiedades de Madrid');
+        }
+      } else {
+        // Para otras ubicaciones, usar el método tradicional con filtros
+        console.log('PropertyContext: Searching other location with filters');
+        const searchFilters = { ...filters, location };
+        setFilters(searchFilters);
+        await loadProperties(searchFilters);
+      }
+    } catch (err) {
+      console.error('Error searching properties by location:', err);
+      setError(err.message);
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
   }, [filters, loadProperties]);
 
   /**
@@ -195,11 +228,12 @@ export const PropertyProvider = ({ children }) => {
 
       const response = await propertyService.getPropertiesByZone(zone);
 
-      if (response.success && response.data) {
+      // La respuesta viene como { success: true, data: { properties: [...] } }
+      if (response && response.success && response.data && response.data.properties && Array.isArray(response.data.properties)) {
         setProperties(response.data.properties);
         setError(null);
       } else {
-        throw new Error(response.message || 'Error al buscar propiedades por zona');
+        throw new Error(response.message || 'Formato de respuesta inválido del servidor');
       }
     } catch (err) {
       console.error('Error searching properties by zone:', err);

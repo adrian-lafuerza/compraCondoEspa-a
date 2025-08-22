@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { useProperty } from '../../context/PropertyContext';
 import PropertiesHeroSection from './components/PropertiesHeroSection';
 import FilterSidebar from './components/FilterSidebar';
 import PropertyCard from './components/PropertyCard';
+import Breadcrumb from '../../components/Breadcrumb/Breadcrumb';
 
 const PropertiesPage = () => {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const PropertiesPage = () => {
     hasAttemptedLoad
   } = useProperty();
   const [title, setTitle] = useState('')
-  const [lastSearchParams, setLastSearchParams] = useState(null)
+  const [lastSearchParams, setLastSearchParams] = useState('')
   const functionsRef = useRef({ searchByLocation, searchByZone, loadProperties })
   
   // Actualizar las funciones en el ref cuando cambien
@@ -31,12 +31,14 @@ const PropertiesPage = () => {
 
   // Estado local para filtros de la UI
   const [localFilters, setLocalFilters] = useState({
+    location: '',
     minPrice: '',
     maxPrice: '',
     minSize: '',
     maxSize: '',
     rooms: '',
-    bathrooms: ''
+    bathrooms: '',
+    sortByPrice: ''
   });
 
   // Función para manejar cambios en filtros
@@ -47,9 +49,20 @@ const PropertiesPage = () => {
     }));
   }, []);
 
-  // useEffect para aplicar filtros automáticamente cuando cambian
   // Estado para las propiedades filtradas
   const [filteredProperties, setFilteredProperties] = useState(properties || []);
+
+  // Debounced filters para evitar llamadas API frecuentes
+  const [debouncedFilters, setDebouncedFilters] = useState(localFilters);
+
+  // useEffect para debouncing de filtros
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedFilters(localFilters);
+    }, 500); // 500ms de delay
+
+    return () => clearTimeout(timer);
+  }, [localFilters]);
 
   // Función para filtrar propiedades localmente
   const filterPropertiesLocally = useCallback((propertiesToFilter, filters) => {
@@ -59,24 +72,64 @@ const PropertiesPage = () => {
     
     const filtered = propertiesToFilter.filter(property => {
       
+      // Filtro por localidad
+      if (filters.location && filters.location !== '') {
+        const propertyLocation = property.location?.toLowerCase() || '';
+        const propertyZone = property.zone?.toLowerCase() || '';
+        const propertyAddress = property.address?.streetName?.toLowerCase() || '';
+        
+        const searchLocation = filters.location.toLowerCase();
+        
+        // Mapear localidades según la fuente de datos
+        let locationMatch = false;
+        
+        if (searchLocation === 'costa-blanca') {
+          locationMatch = propertyZone.includes('costa-blanca') || propertyZone.includes('costa blanca') || 
+                         propertyLocation.includes('alicante') || propertyLocation.includes('valencia') ||
+                         propertyAddress.includes('alicante') || propertyAddress.includes('valencia');
+        } else if (searchLocation === 'costa-del-sol') {
+          locationMatch = propertyZone.includes('costa-del-sol') || propertyZone.includes('costa del sol') ||
+                         propertyLocation.includes('málaga') || propertyLocation.includes('malaga') ||
+                         propertyAddress.includes('málaga') || propertyAddress.includes('malaga');
+        } else if (searchLocation === 'madrid') {
+          locationMatch = propertyLocation.includes('madrid') || propertyAddress.includes('madrid');
+        }
+        
+        if (!locationMatch) {
+          return false;
+        }
+      }
+      
       // Filtro por precio mínimo
-      if (filters.minPrice && filters.minPrice !== '' && property.operation.price < parseInt(filters.minPrice)) {
-        return false;
+      if (filters.minPrice && filters.minPrice !== '') {
+        const minPrice = parseFloat(filters.minPrice);
+        if (!isNaN(minPrice) && property.operation.price < minPrice) {
+          return false;
+        }
       }
       
       // Filtro por precio máximo
-      if (filters.maxPrice && filters.maxPrice !== '' && property.operation.price > parseInt(filters.maxPrice)) {
-        return false;
+      if (filters.maxPrice && filters.maxPrice !== '') {
+        const maxPrice = parseFloat(filters.maxPrice);
+        if (!isNaN(maxPrice) && property.operation.price > maxPrice) {
+          return false;
+        }
       }
       
       // Filtro por tamaño mínimo
-      if (filters.minSize && filters.minSize !== '' && property.features.areaConstructed < parseInt(filters.minSize)) {
-        return false;
+      if (filters.minSize && filters.minSize !== '') {
+        const minSize = parseFloat(filters.minSize);
+        if (!isNaN(minSize) && property.features.areaConstructed < minSize) {
+          return false;
+        }
       }
       
       // Filtro por tamaño máximo
-      if (filters.maxSize && filters.maxSize !== '' && property.features.areaConstructed > parseInt(filters.maxSize)) {
-        return false;
+      if (filters.maxSize && filters.maxSize !== '') {
+        const maxSize = parseFloat(filters.maxSize);
+        if (!isNaN(maxSize) && property.features.areaConstructed > maxSize) {
+          return false;
+        }
       }
       
       // Filtro por número de habitaciones
@@ -92,8 +145,19 @@ const PropertiesPage = () => {
       return true;
     });
     
+    // Aplicar ordenamiento por precio si está seleccionado
+    if (filters.sortByPrice) {
+      if (filters.sortByPrice === 'highest') {
+        filtered.sort((a, b) => b.operation.price - a.operation.price);
+      } else if (filters.sortByPrice === 'lowest') {
+        filtered.sort((a, b) => a.operation.price - b.operation.price);
+      }
+    }
+    
     return filtered;
   }, []);
+
+
 
   // useEffect para aplicar filtros localmente cuando cambien los filtros o las propiedades
   useEffect(() => {
@@ -103,15 +167,15 @@ const PropertiesPage = () => {
       return;
     }
     
-    const hasFilters = Object.values(localFilters).some(value => value !== '' && value !== null && value !== undefined);
+    const hasFilters = Object.values(debouncedFilters).some(value => value !== '' && value !== null && value !== undefined);
     
     if (hasFilters) {
-      const filtered = filterPropertiesLocally(properties, localFilters);
+      const filtered = filterPropertiesLocally(properties, debouncedFilters);
       setFilteredProperties(filtered);
     } else {
       setFilteredProperties(properties);
     }
-  }, [localFilters, properties]); // Ejecutar cuando cambien los filtros locales o las propiedades
+  }, [debouncedFilters, properties]); // Ejecutar cuando cambien los filtros con debounce o las propiedades
 
   useEffect(() => {
     // Scroll automático al top cuando se accede a la página
@@ -121,64 +185,110 @@ const PropertiesPage = () => {
     const locationParam = searchParams.get('location');
     const zoneParam = searchParams.get('zone');
     
+    console.log('PropertiesPage: locationParam =', locationParam);
+    console.log('PropertiesPage: zoneParam =', zoneParam);
+    
     // Crear una clave única para los parámetros actuales
     const currentParamsKey = `${locationParam || ''}-${zoneParam || ''}`;
     
-    // Verificar si los parámetros han cambiado realmente
-    if (lastSearchParams === currentParamsKey) {
-      return; // No hacer nada si los parámetros son los mismos
+    console.log('PropertiesPage useEffect: Parámetros actuales:', currentParamsKey);
+    console.log('PropertiesPage useEffect: Últimos parámetros:', lastSearchParams);
+    
+    // Solo evitar ejecución si es exactamente la misma carga inicial Y no hay cambio de tipo de parámetro
+    const hasLocationParam = !!locationParam;
+    const hasZoneParam = !!zoneParam;
+    const lastHadLocation = lastSearchParams.includes('-') ? lastSearchParams.split('-')[0] !== '' : false;
+    const lastHadZone = lastSearchParams.includes('-') ? lastSearchParams.split('-')[1] !== '' : false;
+    
+    // Permitir ejecución si:
+    // 1. Los parámetros han cambiado
+    // 2. Hay cambio de tipo (de zone a location o viceversa)
+    // 3. Es la primera carga
+    const shouldExecute = lastSearchParams !== currentParamsKey || 
+                         hasLocationParam !== lastHadLocation || 
+                         hasZoneParam !== lastHadZone || 
+                         lastSearchParams === '';
+    
+    if (!shouldExecute) {
+      console.log('PropertiesPage useEffect: Parámetros no han cambiado, saltando');
+      return;
     }
     
     // Actualizar los últimos parámetros de búsqueda
+    console.log('PropertiesPage useEffect: Ejecutando carga de propiedades...');
     setLastSearchParams(currentParamsKey);
 
     if (locationParam) {
-      // Si hay un parámetro de ubicación en la URL, buscar por esa ubicación
-      functionsRef.current.searchByLocation(locationParam);
-      setTitle(locationParam)
+      // Verificar si el parámetro location es realmente una zona
+      const zoneValues = ['costa-blanca', 'costa-del-sol', 'barcelona', 'inversion', 'preconstruccion'];
+      
+      if (zoneValues.includes(locationParam)) {
+        // Es una zona, usar searchByZone
+        console.log('PropertiesPage useEffect: Loading location as zone', locationParam);
+        console.log('PropertiesPage: functionsRef.current =', functionsRef.current);
+        console.log('PropertiesPage: searchByZone function =', functionsRef.current.searchByZone);
+        functionsRef.current.searchByZone(locationParam);
+        
+        const zoneMapping = {
+          'barcelona': 'Barcelona',
+          'costa-del-sol': 'Costa del Sol',
+          'costa-blanca': 'Costa Blanca',
+          'inversion': 'Inversión',
+          'preconstruccion': 'Preconstrucción'
+        };
+        setTitle(zoneMapping[locationParam] || locationParam);
+      } else {
+        // Es una ubicación real, usar searchByLocation
+        console.log('PropertiesPage useEffect: Loading location', locationParam);
+        console.log('PropertiesPage: functionsRef.current =', functionsRef.current);
+        console.log('PropertiesPage: searchByLocation function =', functionsRef.current.searchByLocation);
+        functionsRef.current.searchByLocation(locationParam);
+        // Mapear títulos para ubicaciones específicas
+        const locationMapping = {
+          'madrid': 'Madrid'
+        };
+        setTitle(locationMapping[locationParam] || locationParam.charAt(0).toUpperCase() + locationParam.slice(1));
+      }
     } else if (zoneParam) {
       // Si hay un parámetro de zona en la URL, buscar por esa zona
+      console.log('PropertiesPage useEffect: Loading zone', zoneParam);
+      console.log('PropertiesPage: functionsRef.current =', functionsRef.current);
+      console.log('PropertiesPage: searchByZone function =', functionsRef.current.searchByZone);
       functionsRef.current.searchByZone(zoneParam);
       const zoneMapping = {
         'barcelona': 'Barcelona',
         'costa-del-sol': 'Costa del Sol',
-        'costa-blanca': 'Costa Blanca'
+        'costa-blanca': 'Costa Blanca',
+        'inversion': 'Inversión',
+        'preconstruccion': 'Preconstrucción'
       };
 
       const propertyZone = zoneMapping[zoneParam];
       setTitle(propertyZone)
     } else if (properties.length === 0 && !hasAttemptedLoad) {
       // Si no hay parámetros, no hay propiedades cargadas y no se ha intentado cargar
+      console.log('PropertiesPage useEffect: Loading all properties');
       functionsRef.current.loadProperties();
+      setTitle('Todas las Propiedades');
+    } else if (!locationParam && !zoneParam) {
+      // Si no hay parámetros de URL, establecer título por defecto
+      setTitle('Todas las Propiedades');
     }
-  }, [searchParams, lastSearchParams, properties.length, hasAttemptedLoad]); // Dependencias simplificadas
+    
 
-  // Función para manejar la búsqueda por ubicación
-  const handleLocationSearch = useCallback((location) => {
-    searchByLocation(location);
-    // Actualizar URL para reflejar la búsqueda
-    navigate(`/properties?location=${encodeURIComponent(location)}`);
-  }, [searchByLocation, navigate]);
-
-  // Función para aplicar filtros
-  const handleApplyFilters = useCallback(() => {
-    const filtersToApply = {
-      ...filters,
-      ...localFilters
-    };
-    updateFilters(filtersToApply);
-    loadProperties(filtersToApply);
-  }, [filters, localFilters, updateFilters, loadProperties]);
+  }, [searchParams]); // Solo depende de searchParams para detectar cambios de URL
 
   // Función para limpiar filtros
   const handleClearFilters = useCallback(() => {
     setLocalFilters({
+      location: '',
       minPrice: '',
       maxPrice: '',
       minSize: '',
       maxSize: '',
       rooms: '',
-      bathrooms: ''
+      bathrooms: '',
+      sortByPrice: ''
     });
     // Los filtros se limpiarán automáticamente por el useEffect
     // que mostrará todas las propiedades cuando no hay filtros
@@ -190,35 +300,31 @@ const PropertiesPage = () => {
     const zoneParam = searchParams.get('zone');
 
     if (locationParam) {
-      searchByLocation(locationParam);
+      const zoneValues = ['costa-blanca', 'costa-del-sol', 'barcelona', 'inversion', 'preconstruccion'];
+      if (zoneValues.includes(locationParam)) {
+        searchByZone(locationParam);
+      } else {
+        searchByLocation(locationParam);
+      }
     } else if (zoneParam) {
       searchByZone(zoneParam);
     } else {
       loadProperties();
     }
   }, [searchParams, searchByLocation, searchByZone, loadProperties]);
+  
 
   return (
     <div className="min-h-screen animate-fadeIn">
       {/* Hero Section */}
       <PropertiesHeroSection title={title} />
 
-      {/* Botón de volver atrás */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="md:max-w-[70%] sm:max-w-[100%] mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="group flex items-center text-gray-600 hover:text-blue-600 transition-all duration-300 bg-gray-50 hover:bg-blue-50 px-4 py-2 rounded-lg border border-gray-200 hover:border-blue-200 shadow-sm hover:shadow-md"
-          >
-            <ChevronLeftIcon className="h-5 w-5 mr-2 transition-transform duration-300 group-hover:-translate-x-1" />
-            <span className="cursor-pointer font-medium">Volver atrás</span>
-          </button>
-        </div>
-      </div>
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb />
 
       {/* Sección de propiedades con filtros */}
       <div className="bg-gray-50 min-h-[40vh] animate-slideUp">
-        <div className="md:max-w-[70%] sm:max-w-[100%] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="xl:max-w-[80%] lg:max-w-[90%] md:max-w-[100%] sm:max-w-[100%] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
             {/* Sidebar de filtros */}
             <div className="w-full lg:w-[25%] lg:flex-shrink-0 order-1">
@@ -226,6 +332,7 @@ const PropertiesPage = () => {
                 localFilters={localFilters}
                 handleFilterChange={handleFilterChange}
                 handleClearFilters={handleClearFilters}
+                setLocalFilters={setLocalFilters}
               />
             </div>
 
@@ -264,6 +371,11 @@ const PropertiesPage = () => {
 
               {!loading && !error && (
                 <div className="space-y-4 lg:space-y-6">
+                  {(() => {
+                    console.log('Rendering properties. Filtered:', filteredProperties.length, 'Total:', properties.length);
+                    console.log('Loading:', loading, 'Error:', error);
+                    return null;
+                  })()}
                   {filteredProperties.length > 0 ? (
                     filteredProperties.map((property, index) => (
                       <PropertyCard key={property.propertyId} property={property} index={index} />

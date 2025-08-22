@@ -56,9 +56,14 @@ export const PropertiesSection = () => {
         navigate('/properties?zone=costa-blanca');
     };
 
-    const handleViewBarcelonaProperties = () => {
-        searchByZone('barcelona');
-        navigate('/properties?zone=barcelona');
+    const handleViewInvestmentOpportunities = () => {
+        searchByZone('inversion');
+        navigate('/properties?zone=inversion');
+    };
+
+    const handleViewPreconstruction = () => {
+        searchByZone('preconstruccion');
+        navigate('/properties?zone=preconstruccion');
     };
     return (
         <section id="properties-section" className="bg-white py-8 md:py-16 px-4 md:px-8">
@@ -153,15 +158,38 @@ export const PropertiesSection = () => {
                         <div className="relative">
                             <img
                                 src="/images/sales.png"
-                                alt="Barcelona - Cultura mediterránea y modernidad"
+                                alt="Oportunidades de Inversión - Rentabilidad garantizada"
                                 className="w-full object-cover image-hover-smooth"
                             />
                         </div>
                         <div className="px-4 md:px-6 py-6 md:py-8 bg-white">
-                            <span className="text-gray-400 mb-2 text-sm">Obra nueva</span>
-                            <h3 className="text-gray-900 text-base md:text-lg font-semibold mb-4">Barcelona – Cultura mediterránea y modernidad</h3>
+                            <span className="text-gray-400 mb-2 text-sm">Inversión</span>
+                            <h3 className="text-gray-900 text-base md:text-lg font-semibold mb-4">Oportunidades de Inversión – Rentabilidad garantizada</h3>
                             <button
-                                onClick={handleViewBarcelonaProperties}
+                                onClick={handleViewInvestmentOpportunities}
+                                className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-xs md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
+                            >
+                                <span className="truncate">Ver Propiedades</span>
+                                <span className="ml-2">→</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div 
+                        ref={(el) => cardsRef.current[4] = el}
+                        className="group relative overflow-hidden shadow-lg hover:-translate-y-2 transition-all duration-300 rounded-lg scroll-reveal hover-lift animate-shimmer"
+                    >
+                        <div className="relative">
+                            <img
+                                src="/images/rent.png"
+                                alt="Preconstrucción - Proyectos exclusivos"
+                                className="w-full object-cover image-hover-smooth"
+                            />
+                        </div>
+                        <div className="px-4 md:px-6 py-6 md:py-8 bg-white">
+                            <span className="text-gray-400 mb-2 text-sm">Preconstrucción</span>
+                            <h3 className="text-gray-900 text-base md:text-lg font-semibold mb-4">Preconstrucción – Proyectos exclusivos</h3>
+                            <button
+                                onClick={handleViewPreconstruction}
                                 className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-xs md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
                             >
                                 <span className="truncate">Ver Propiedades</span>

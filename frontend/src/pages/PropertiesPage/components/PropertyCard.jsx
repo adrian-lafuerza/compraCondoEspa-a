@@ -1,16 +1,21 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const PropertyCard = ({ property, index }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const animationDelay = `${index * 0.1}s`;
 
   const handleCardClick = () => {
-    navigate(`/property/${property.propertyId}`);
+    navigate(`/property/${property.propertyId}`, {
+      state: {
+        fromSearch: location.search
+      }
+    });
   };
 
   return (
     <div
-      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 animate-fadeInUp cursor-pointer h-auto sm:h-[600px] lg:h-[280px]"
+      className="font-space-grotesk bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 animate-fadeInUp cursor-pointer h-auto sm:h-[600px] lg:h-[280px]"
       style={{ animationDelay }}
       onClick={handleCardClick}
     >
@@ -28,7 +33,7 @@ const PropertyCard = ({ property, index }) => {
         <div className="flex-1 flex flex-col justify-between p-4 sm:p-5 lg:p-4 min-h-[150px] sm:min-h-[170px] lg:h-full">
           <div className="flex-1 space-y-3">
             {/* Título y precio */}
-            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 line-clamp-2 leading-tight">
+            <h3 className="font-space-grotesk text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 line-clamp-2 leading-tight">
               {`Piso en calle ${property?.address?.streetName}` || 'Dirección no disponible'}
             </h3>
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
@@ -41,8 +46,8 @@ const PropertyCard = ({ property, index }) => {
             </div>
             {/* Descripción */}
             {property?.descriptions?.map((item, index) => (
-              <p key={index} className="text-gray-600 text-sm lg:text-sm leading-relaxed line-clamp-2">
-                {item.text}
+              <p key={index} className="text-gray-600 text-sm lg:text-md leading-relaxed line-clamp-2">
+                {item.text || item}
               </p>
             ))}
           </div>

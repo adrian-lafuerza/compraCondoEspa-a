@@ -1,5 +1,7 @@
-import { useEffect, useRef } from 'react'
+import React, { useRef, useEffect } from 'react';
+
 import StarIcon from '../../assets/Star.svg'
+import YoutubeButton from '../../assets/youtube-button.svg'
 
 
 const OportunitiesSection = () => {
@@ -8,6 +10,7 @@ const OportunitiesSection = () => {
     const cardRef = useRef(null)
     const textRef = useRef(null)
     const imageRef = useRef(null)
+    const marqueeRef = useRef(null)
 
     useEffect(() => {
         const observerOptions = {
@@ -35,6 +38,74 @@ const OportunitiesSection = () => {
         }
     }, [])
 
+    // Animación de marquee continua
+    useEffect(() => {
+        const marqueeElement = marqueeRef.current;
+        if (!marqueeElement) return;
+
+        let animationId;
+        let position;
+        let containerWidth;
+        let contentWidth;
+        const speed = 1; // píxeles por frame
+
+        const initializeAnimation = () => {
+            const container = marqueeElement.parentElement;
+            containerWidth = container.offsetWidth;
+            // Forzar recálculo del scrollWidth
+            marqueeElement.style.transform = 'translateX(0px)';
+            contentWidth = marqueeElement.scrollWidth;
+            position = containerWidth + 200;
+        };
+
+        const animate = () => {
+            position -= speed;
+
+            // Cuando el contenido desaparece completamente por la izquierda, reinicia desde la derecha
+            // Usamos un margen mucho mayor para asegurar que TODO el contenido sea visible
+            if (position <= -contentWidth - 200) {
+                position = containerWidth + 200;
+            }
+
+            marqueeElement.style.transform = `translateX(${position}px)`;
+            animationId = requestAnimationFrame(animate);
+        };
+
+        const handleResize = () => {
+            // Recalcular dimensiones cuando cambie el tamaño de la ventana
+            const container = marqueeElement.parentElement;
+            const newContainerWidth = container.offsetWidth;
+
+            // Forzar recálculo del scrollWidth después del resize
+            marqueeElement.style.transform = 'translateX(0px)';
+            setTimeout(() => {
+                const newContentWidth = marqueeElement.scrollWidth;
+
+                // Ajustar la posición proporcionalmente
+                const ratio = position / containerWidth;
+                containerWidth = newContainerWidth;
+                contentWidth = newContentWidth;
+                position = ratio * containerWidth;
+            }, 50);
+        };
+
+        // Inicializar después de que el DOM se renderice
+        setTimeout(() => {
+            initializeAnimation();
+            animate();
+        }, 100);
+
+        // Agregar listener para resize
+        window.addEventListener('resize', handleResize);
+
+        return () => {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            window.removeEventListener('resize', handleResize);
+        };
+    }, [])
+
     const handleScrollToProperties = () => {
         const propertiesSection = document.getElementById('properties-section');
         if (propertiesSection) {
@@ -48,16 +119,19 @@ const OportunitiesSection = () => {
     return (
         <section ref={sectionRef}>
             {/* Banner superior */}
-            <div ref={bannerRef} className='bg-[#0E0E0E] flex flex-col md:flex-row text-white p-3 md:p-4 justify-center md:justify-around items-center mb-4 md:mb-6 shadow-2xl overflow-hidden gap-2 md:gap-0 scroll-reveal animate-slideDown'>
-                <p className="text-sm md:text-base text-center md:text-left">
-                    Mejores oportunidades inmobiliarias en EE.UU. y España
-                </p>
-                <a href="#" className="hover:opacity-80 transition-opacity flex-shrink-0">
-                    <img src={StarIcon} alt="Estrella" className="w-4 h-4 md:w-5 md:h-5" />
-                </a>
-                <p className="text-sm md:text-base text-center md:text-left hidden md:block">
-                    Tu puerta de entrada a las mejores oportunidades inmobiliarias en EE.UU. y España
-                </p>
+
+            <div ref={bannerRef} className='bg-[#0E0E0E] text-white p-3 md:p-4 mb-4 md:mb-6 shadow-2xl scroll-reveal animate-slideDown banner-marquee'>
+                <div className="banner-marquee-content" ref={marqueeRef}>
+                    <p className="font-gothic-a1 text-lg md:text-lg text-center md:text-left">
+                        Mejores oportunidades inmobiliarias en EE.UU. y España
+                    </p>
+                    <a href="#" className="hover:opacity-80 transition-opacity flex-shrink-0">
+                        <img src={StarIcon} alt="Estrella" className="w-4 h-4 md:w-5 md:h-5" />
+                    </a>
+                    <p className="font-gothic-a1 text-lg md:text-lg text-center md:text-left">
+                        Tu puerta de entrada a las mejores oportunidades inmobiliarias en EE.UU. y España
+                    </p>
+                </div>
             </div>
 
             {/* Card de Inversiones */}
@@ -69,7 +143,8 @@ const OportunitiesSection = () => {
                             <div ref={textRef} className="p-6 md:p-8 lg:p-12 xl:p-24 flex flex-col justify-center scroll-reveal animate-slideInLeft delay-200">
                                 <div className="">
                                     <div className='flex'>
-                                        <h2 className="text-xl md:text-2xl lg:text-4xl xl:text-4xl font-bold text-gray-900 mb-4 md:mb-6 lg:mb-8">
+                                        <h2 className="font-work-sans text-xl md:text-2xl lg:text-4xl xl:text-4xl font-bold text-gray-900 mb-4 md:mb-6 lg:mb-8">
+
                                             🏠 Inversiones inteligentes en propiedades españolas
                                         </h2></div>
                                     <p className="text-gray-600 mb-6 md:mb-8 lg:mb-10 leading-relaxed text-sm md:text-base lg:text-lg">
@@ -95,14 +170,14 @@ const OportunitiesSection = () => {
                                         <span className="text-gray-700 text-sm md:text-base lg:text-lg font-bold">Acompañamiento legal y fiscal completo</span>
                                     </div>
                                     <button onClick={handleScrollToProperties} className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-3 md:py-4 rounded text-xs md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center justify-center md:justify-start w-full md:w-auto hover-lift animate-buttonPulse">
-                                    Ver Propiedades
-                                    <span className="ml-2">→</span>
-                                </button>
+                                        Ver Propiedades
+                                        <span className="ml-2">→</span>
+                                    </button>
                                 </div>
                             </div>
 
                             {/* Imagen de Ruben */}
-                            <div ref={imageRef} className="relative flex items-stretch p-4 md:p-6 lg:p-8 h-full scroll-reveal animate-slideInRight delay-400">
+                            <div ref={imageRef} className="relative flex items-stretch p-8 md:p-6 lg:p-8 h-full scroll-reveal animate-slideInRight delay-400">
                                 <div className="w-full max-w-lg mx-auto flex flex-col h-full">
                                     <div className="relative flex-1">
                                         {/* Marco negro grueso */}
@@ -125,12 +200,14 @@ const OportunitiesSection = () => {
                                                 />
                                             </div>
 
-                                            {/* Botón de play mejorado en la parte inferior central */}
-                                            <div className="absolute bottom-3 md:bottom-4 lg:bottom-6 left-1/2 transform -translate-x-1/2">
-                                                <div className="w-12 h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 bg-white bg-opacity-90 rounded-full flex items-center justify-center cursor-pointer hover:bg-white hover:scale-110 transition-all duration-300 shadow-lg">
-                                                    <svg className="w-4 h-4 md:w-5 md:h-5 lg:w-6 lg:h-6 text-black ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                                        <path d="M8 5v14l11-7z" />
-                                                    </svg>
+                                            {/* Botón de YouTube posicionado mitad dentro y mitad fuera */}
+                                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
+                                                <div className="cursor-pointer hover:scale-110 transition-all duration-300">
+                                                    <img 
+                                                        src={YoutubeButton} 
+                                                        alt="Play video" 
+                                                        className="w-28 h-28"
+                                                    />
                                                 </div>
                                             </div>
                                         </div>

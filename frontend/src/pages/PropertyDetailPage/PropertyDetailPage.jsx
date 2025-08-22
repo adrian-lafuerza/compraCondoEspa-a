@@ -1,14 +1,48 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { HeartIcon, ShareIcon, MapPinIcon, HomeIcon, Square3Stack3DIcon, Square2StackIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { useProperty } from '../../context/PropertyContext';
+import Breadcrumb from '../../components/Breadcrumb/Breadcrumb';
+import ImageModal from '../../components/ImageModal/ImageModal';
 
 const PropertyDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { loadPropertyById, currentProperty, loading, error } = useProperty();
+
+  // Función para construir el path de propiedades preservando query parameters
+  const getPropertiesPath = useCallback(() => {
+    // Intentar obtener los query parameters del estado de navegación o del referrer
+    const state = location.state;
+    
+    // Si hay query parameters en el estado de navegación, usarlos
+    if (state && state.fromSearch) {
+      return `/properties${state.fromSearch}`;
+    }
+    
+    // Si no hay estado, intentar reconstruir desde el referrer o usar valores por defecto
+    // Esto es un fallback para casos donde no se pasó el estado
+    const urlParams = new URLSearchParams(window.location.search);
+    const referrer = document.referrer;
+    
+    if (referrer && referrer.includes('/properties')) {
+      try {
+        const referrerUrl = new URL(referrer);
+        const referrerSearch = referrerUrl.search;
+        if (referrerSearch) {
+          return `/properties${referrerSearch}`;
+        }
+      } catch (e) {
+        // Si hay error parseando el referrer, usar path por defecto
+      }
+    }
+    
+    // Fallback al path básico
+    return '/properties';
+  }, [location.state]);
 
 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -110,7 +144,8 @@ const PropertyDetailPage = () => {
 
   if (!currentProperty && !loading && !error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="font-space-grotesk min-h-screen flex items-center justify-center bg-gray-50">
+
         <div className="text-center max-w-md mx-auto p-6">
           <div className="bg-white rounded-lg shadow-lg p-8">
             <div className="flex items-center justify-center w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full">
@@ -141,21 +176,23 @@ const PropertyDetailPage = () => {
   }
 
   const property = currentProperty;
+  
 
   return (
-    <div className="md:max-w-[65vw] mx-auto min-h-screen bg-gray-50 animate-fadeIn pb-4">
-      {/* Header con navegación */}
-      <div className="sticky top-0 z-10">
-        <div className="max-w-7xl py-4">
-          <button
-            onClick={() => navigate(-1)}
-            className="cursor-pointer group flex items-center text-gray-600 hover:text-blue-600 transition-all duration-300 bg-gray-50 hover:bg-blue-50 px-4 py-2 rounded-lg border border-gray-200 hover:border-blue-200 shadow-sm hover:shadow-md"
-          >
-            <ChevronLeftIcon className="h-5 w-5 mr-2 transition-transform duration-300 group-hover:-translate-x-1" />
-            <span className="font-medium">Volver atrás</span>
-          </button>
-        </div>
-      </div>
+    <div className="md:max-w-[65vw] mx-auto min-h-screen bg-gray-50 animate-fadeIn pb-4 px-4 sm:px-6 md:px-0">
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb 
+        customItems={[
+          {
+            label: 'Propiedades',
+            path: getPropertiesPath()
+          },
+          {
+            label: property?.address?.streetName ? `Piso en ${property.address.streetName}` : 'Detalle de Propiedad',
+            path: `/property/${id}`
+          }
+        ]}
+      />
 
       <div className="overflow-hidden">
         {/* Galería de imágenes responsiva */}
@@ -235,14 +272,14 @@ const PropertyDetailPage = () => {
 
       </div>
       {/* Card de información de la propiedad */}
-      <div className="bg-white rounded-lg shadow-lg sm:p-6 lg:p-12 mb-4">
+      <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 lg:p-12 mb-4 font-space-grotesk">
         {/* Layout principal de dos columnas desde el inicio */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
           {/* Columna izquierda - Contenido principal */}
           <div className="lg:col-span-2">
             <div className="flex justify-between items-start mb-4 sm:mb-6">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3 sm:mb-4">Piso en {property?.address?.town}</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3 sm:mb-4">Piso en {property?.address?.town || property?.propertyZone}</h1>
                 <div className='flex flex-col sm:flex-row gap-2 sm:gap-4'>
                   <p className="text-lg sm:text-xl mb-2 sm:mb-4">{typeof property?.operation?.price === 'number' ? `${property?.operation?.price.toLocaleString()} €` : property?.operation?.price}</p>
                   <p className="text-lg sm:text-xl mb-2 sm:mb-4">{property?.reference}</p>
@@ -289,8 +326,8 @@ const PropertyDetailPage = () => {
               property?.descriptions?.length && property?.descriptions?.map((description, index) => {
 
                 return (
-                  <div key={index} className="mb-6 sm:mb-8">
-                    <p className="text-gray-500 leading-relaxed text-base sm:text-lg">{description.text}</p>
+                  <div key={index} className="font-montserrat mb-6 sm:mb-8">
+                    <p className="text-gray-500 leading-relaxed text-base sm:text-lg">{description.text || description}</p>
                   </div>
                 )
               })
@@ -489,83 +526,14 @@ const PropertyDetailPage = () => {
       </div>
 
       {/* Modal de galería de imágenes */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center animate-fadeIn">
-          <div className="relative w-full h-full max-w-7xl p-4 flex flex-col">
-            {/* Botón cerrar */}
-            <button
-              onClick={closeModal}
-              className="cursor-pointer absolute top-4 right-4 z-20 bg-black bg-opacity-50 hover:bg-opacity-70 backdrop-blur-sm rounded-full p-3 transition-all duration-300 border border-white border-opacity-20"
-            >
-              <XMarkIcon className="h-6 w-6 text-white" />
-            </button>
-
-            {/* Imagen del modal */}
-            <div className="relative flex-1 flex items-center justify-center">
-              <div className="relative max-w-full max-h-full">
-                <img
-                  key={currentImageIndex} // Key para forzar re-render y animación
-                  src={currentProperty?.images?.[currentImageIndex]?.url}
-                  alt={`Vista ${currentImageIndex + 1}`}
-                  className="max-w-full max-h-[85vh] object-contain mx-auto transition-all duration-500 ease-in-out transform animate-fadeInScale"
-                  style={{
-                    filter: 'drop-shadow(0 10px 30px rgba(0, 0, 0, 0.5))'
-                  }}
-                />
-
-                {/* Navegación del modal - Solo mostrar si hay más de una imagen */}
-                {currentProperty?.images?.length > 1 && (
-                  <>
-                    <button
-                      onClick={prevImage}
-                      className="cursor-pointer absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 backdrop-blur-sm rounded-full p-4 transition-all duration-300 border border-white border-opacity-20 hover:scale-110"
-                    >
-                      <ChevronLeftIcon className="h-8 w-8 text-white" />
-                    </button>
-                    <button
-                      onClick={nextImage}
-                      className="cursor-pointer absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 hover:bg-opacity-70 backdrop-blur-sm rounded-full p-4 transition-all duration-300 border border-white border-opacity-20 hover:scale-110"
-                    >
-                      <ChevronRightIcon className="h-8 w-8 text-white" />
-                    </button>
-                  </>
-                )}
-
-                {/* Indicador de imagen del modal */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 backdrop-blur-sm text-white px-6 py-3 rounded-full border border-white border-opacity-20">
-                  <span className="text-sm font-medium">
-                    {currentImageIndex + 1} / {currentProperty?.images?.length || 0}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Miniaturas en el modal - Solo mostrar si hay más de una imagen */}
-            {currentProperty?.images?.length > 1 && (
-              <div className="mt-6 flex justify-center">
-                <div className="flex space-x-3 overflow-x-auto max-w-full px-4 py-2">
-                  {currentProperty?.images?.map((image, index) => (
-                    <div
-                      key={index}
-                      className={`flex-shrink-0 w-20 h-20 cursor-pointer rounded-lg overflow-hidden border-2 transition-all duration-300 hover:scale-105 ${index === currentImageIndex
-                        ? 'border-white shadow-lg shadow-white/25'
-                        : 'border-transparent hover:border-gray-300'
-                        }`}
-                      onClick={() => setCurrentImageIndex(index)}
-                    >
-                      <img
-                        src={image?.url}
-                        alt={`Vista ${index + 1}`}
-                        className="w-full h-full object-cover transition-all duration-300"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      <ImageModal
+        isOpen={isModalOpen}
+        images={currentProperty?.images || []}
+        currentIndex={currentImageIndex}
+        onClose={closeModal}
+        onNext={nextImage}
+        onPrev={prevImage}
+      />
     </div>
   );
 };

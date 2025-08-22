@@ -1,8 +1,185 @@
 @import "tailwindcss";
 
+/* Roboto Font Faces */
+@font-face {
+  font-family: 'Roboto';
+  src: url('/assets/fonts/Roboto-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('/assets/fonts/Roboto-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('/assets/fonts/Roboto-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('/assets/fonts/Roboto-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Gothic A1 Font Faces */
+@font-face {
+  font-family: 'Gothic A1';
+  src: url('/assets/fonts/GothicA1-Light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gothic A1';
+  src: url('/assets/fonts/GothicA1-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gothic A1';
+  src: url('/assets/fonts/GothicA1-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gothic A1';
+  src: url('/assets/fonts/GothicA1-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Gothic A1';
+  src: url('/assets/fonts/GothicA1-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Poppins Font Faces */
+@font-face {
+  font-family: 'Poppins';
+  src: url('/assets/fonts/Poppins-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('/assets/fonts/Poppins-Medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('/assets/fonts/Poppins-SemiBold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Poppins';
+  src: url('/assets/fonts/Poppins-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Work Sans Font Faces */
+@font-face {
+  font-family: 'Work Sans';
+  src: url('/assets/fonts/work-sans/work-sans-v23-latin-300.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Work Sans';
+  src: url('/assets/fonts/work-sans/work-sans-v23-latin-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Work Sans';
+  src: url('/assets/fonts/work-sans/work-sans-v23-latin-500.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Work Sans';
+  src: url('/assets/fonts/work-sans/work-sans-v23-latin-600.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Work Sans';
+  src: url('/assets/fonts/work-sans/work-sans-v23-latin-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Removed global font override to allow Tailwind font classes to work */
+
 body {
   @apply bg-white;
+  font-family: 'Roboto', sans-serif;
 }
+
+/* Force Gothic A1 font */
+.font-gothic-a1 {
+  font-family: 'Gothic A1', sans-serif !important;
+}
+
+/* Force Gothic A1 font */
+.font-work-sans {
+  font-family: 'Work Sans', sans-serif !important;
+}
+
+/* Force Gothic A1 font */
+.font-poppins {
+  font-family: 'Poppins', sans-serif !important;
+}
+
+/* Force Gothic A1 font */
+.font-space-grotesk {
+  font-family: 'Space Grotesk', sans-serif !important;
+}
+
+/* Force Gothic A1 font */
+.font-montserrat {
+  font-family: 'Montserrat', sans-serif !important;
+}
+
 
 /* Animaciones para el carrusel de Instagram */
 @keyframes slideInUp {
@@ -108,6 +285,26 @@ body {
 /* Estilos para el contenido HTML del blog */
 .blog-content {
   @apply max-w-none text-gray-800 leading-relaxed;
+  /* Aislamiento para prevenir que afecte otros elementos */
+  isolation: isolate;
+  contain: layout style;
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Resetear estilos que puedan venir del HTML de las campañas */
+.blog-content * {
+  position: relative !important;
+  z-index: auto !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Prevenir elementos fixed o absolute que escapen del contenedor */
+.blog-content *[style*="position: fixed"],
+.blog-content *[style*="position: absolute"] {
+  position: relative !important;
 }
 
 .blog-content h1,
@@ -122,10 +319,46 @@ body {
 
 .blog-content img {
   @apply rounded-lg shadow-md;
+  max-width: 100% !important;
+  height: auto !important;
 }
 
 .blog-content a {
   @apply text-indigo-600 hover:text-indigo-800 transition-colors duration-200;
+}
+
+/* Prevenir que tablas se desborden */
+.blog-content table {
+  width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+  word-wrap: break-word !important;
+}
+
+/* Resetear margins y paddings problemáticos */
+.blog-content body,
+.blog-content html {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Estilos para el contenedor de campaña con iframe */
+.campaign-content-container {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+}
+
+.campaign-content-container iframe {
+  width: 100%;
+  min-height: 400px;
+  border: none;
+  display: block;
 }
 
 /* Responsive grid para las campañas */
@@ -208,6 +441,7 @@ html {
   padding-top: 1.5rem;
   padding-bottom: 1.5rem;
 }
+
 
 /* Animaciones para la página de propiedades */
 @keyframes fadeIn {
@@ -550,4 +784,28 @@ html {
 
 .transition-bounce {
     transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Animación de scroll horizontal infinito */
+.banner-marquee {
+    overflow: hidden;
+    width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 2rem 1.5rem;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.banner-marquee-content {
+    display: flex;
+    white-space: nowrap;
+    position: absolute;
+    will-change: transform;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: nowrap;
 }

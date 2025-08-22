@@ -78,8 +78,14 @@ const ContactSection = () => {
     
 
     return (
-        <section ref={sectionRef} className="py-12 md:py-16 lg:py-20 bg-gray-100">
-            <div className="max-w-full xl:max-w-[1400px] 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <section ref={sectionRef} className="relative py-12 md:py-16 lg:py-20 overflow-hidden">
+            {/* Fondo dividido horizontal - mitad superior blanco, mitad inferior gris */}
+            <div className="absolute inset-0">
+                <div className="h-1/2 w-full bg-white"></div>
+                <div className="absolute bottom-0 left-0 h-1/2 w-full bg-gray-100"></div>
+            </div>
+            
+            <div className="relative z-10 max-w-full xl:max-w-[1400px] 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div ref={headerRef} className="text-center mb-8 md:mb-12 lg:mb-16 scroll-reveal animate-fadeInUp">
                     <div className="flex flex-col md:flex-row items-center justify-center mb-4 md:mb-6">
@@ -98,7 +104,7 @@ const ContactSection = () => {
                 </div>
 
                 {/* Contact Form Container */}
-                <div ref={containerRef} className="bg-gray-100 rounded-xl md:rounded-2xl shadow-2xl py-8 md:py-16 lg:py-24 px-4 md:px-8 lg:px-12 xl:px-20 max-w-full xl:max-w-[1400px] 2xl:max-w-[1600px] mx-auto min-h-[500px] md:min-h-[600px] lg:min-h-[700px] flex items-center scroll-reveal animate-fadeInUp delay-200 hover-lift">
+                <div ref={containerRef} className="bg-white rounded-xl md:rounded-2xl shadow-2xl py-8 md:py-16 lg:py-24 px-4 md:px-8 lg:px-12 xl:px-20 max-w-full xl:max-w-[1400px] 2xl:max-w-[1600px] mx-auto min-h-[500px] md:min-h-[600px] lg:min-h-[700px] flex items-center scroll-reveal animate-fadeInUp delay-200 hover-lift">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-20 w-full">
                         {/* Left Column - Contact Info */}
                         <div ref={leftColumnRef} className="flex flex-col justify-center scroll-reveal animate-slideInLeft delay-400">
@@ -116,7 +122,7 @@ const ContactSection = () => {
                                     </div>
                                     <div>
                                         <p className="text-xs md:text-sm text-gray-500 mb-1">Address:</p>
-                                        <p className="text-gray-900 font-medium text-sm md:text-base lg:text-lg">New Mexico 31134</p>
+                                        <p className="text-gray-900 font-medium text-sm md:text-base lg:text-lg">Miami, Florida, Estados Unidos</p>
                                     </div>
                                 </div>
 
@@ -128,7 +134,7 @@ const ContactSection = () => {
                                     </div>
                                     <div>
                                         <p className="text-xs md:text-sm text-gray-500 mb-1">Mi Email</p>
-                                        <p className="text-gray-900 font-medium text-sm md:text-base lg:text-lg">mymail@mail.com</p>
+                                        <p className="text-gray-900 font-medium text-sm md:text-base lg:text-lg">ralfonso@compracondomiami.com</p>
                                     </div>
                                 </div>
 
@@ -140,7 +146,7 @@ const ContactSection = () => {
                                     </div>
                                     <div>
                                         <p className="text-xs md:text-sm text-gray-500 mb-1">Llámame</p>
-                                        <p className="text-gray-900 font-medium text-sm md:text-base lg:text-lg">00-1234 00000</p>
+                                        <p className="text-gray-900 font-medium text-sm md:text-base lg:text-lg">+34.644.973.877</p>
                                     </div>
                                 </div>
                             </div>

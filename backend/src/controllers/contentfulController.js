@@ -342,7 +342,9 @@ const getPropertiesByZone = async (req, res) => {
     const zoneMapping = {
       'barcelona': 'Barcelona',
       'costa-del-sol': 'Costa del Sol',
-      'costa-blanca': 'Costa Blanca'
+      'costa-blanca': 'Costa Blanca',
+      'inversion': 'Inversion',
+      'preconstruccion': 'Preconstruccion'
     };
 
     const propertyZone = zoneMapping[zone];
@@ -352,7 +354,7 @@ const getPropertiesByZone = async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Zona no válida',
-        message: 'Las zonas válidas son: barcelona, costa-del-sol, costa-blanca'
+        message: 'Las zonas válidas son: barcelona, costa-del-sol, costa-blanca, inversion, preconstruccion'
       });
     }
 

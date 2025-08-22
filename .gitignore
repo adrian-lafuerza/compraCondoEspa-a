@@ -7,26 +7,15 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Dependency directories
-node_modules/
-bower_components/
-
-# Build output
-dist/
-dist-ssr/
-build/
-out/
-
-# Local environment files
+node_modules
+dist
+dist-ssr
 *.local
-.env
-.env.*
-*.md
 
 # Editor directories and files
-.vscode/
+.vscode/*
 !.vscode/extensions.json
-.idea/
+.idea
 .DS_Store
 *.suo
 *.ntvs*
@@ -34,23 +23,10 @@ out/
 *.sln
 *.sw?
 
-# OS generated files
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Misc
-*.tgz
-*.zip
-*.tar
-coverage/
-.cache/
-
+# Ignore files
 .env
-.env.local
+.env.test
 .env.production
-backend/package-lock.json
-nul
-.vercel
-=======
->>>>>>> 3aa483f47ca16c206b9442ff49997f82d59b4c7e
+.env.development
+*.md
+*.txt

@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { mailchimpCache, MailchimpCacheKeys, MailchimpCacheTTL } = require('../utils/mailchimpCache');
 
 // Configuración de Mailchimp
 const MAILCHIMP_API_KEY = process.env.MAILCHIMP_API_KEY;
@@ -239,6 +240,27 @@ const getCampaigns = async (req, res) => {
   try {
     const { status, type, count = 10, offset = 0, includeHtml = 'false' } = req.query;
 
+    // Crear clave de caché basada en los parámetros de búsqueda
+    const searchParams = {
+      status: status || 'all',
+      type: type || 'all',
+      count: parseInt(count),
+      offset: parseInt(offset),
+      includeHtml: includeHtml
+    };
+
+    const cacheKey = `${MailchimpCacheKeys.CAMPAIGNS}:${JSON.stringify(searchParams)}`;
+
+    // Verificar caché primero
+    const cachedData = await mailchimpCache.get(cacheKey);
+    
+    if (cachedData) {
+      console.log('📋 Campañas obtenidas del caché');
+      return res.status(200).json(cachedData);
+    }
+
+    console.log('🔄 Consultando API de Mailchimp para campañas...');
+
     // Construir parámetros de consulta
     const params = new URLSearchParams({
       count: count.toString(),
@@ -418,7 +440,7 @@ const getCampaigns = async (req, res) => {
       }
     }
 
-    res.status(200).json({
+    const responseData = {
       success: true,
       data: {
         campaigns: campaignsWithDetails,
@@ -426,7 +448,13 @@ const getCampaigns = async (req, res) => {
         count: campaignsWithDetails.length,
         offset: parseInt(offset)
       }
-    });
+    };
+
+    // Guardar en caché
+    await mailchimpCache.set(cacheKey, responseData, MailchimpCacheTTL.CAMPAIGNS);
+    console.log('💾 Campañas guardadas en caché');
+
+    res.status(200).json(responseData);
 
   } catch (error) {
     console.error('❌ Error al obtener campañas:', error.response?.data || error.message);
@@ -454,6 +482,17 @@ const getCampaignById = async (req, res) => {
       });
     }
 
+    // Verificar caché primero
+    const cacheKey = `${MailchimpCacheKeys.CAMPAIGNS}:detail:${campaignId}`;
+    const cachedData = await mailchimpCache.get(cacheKey);
+    
+    if (cachedData) {
+      console.log(`📋 Detalles de campaña ${campaignId} obtenidos del caché`);
+      return res.status(200).json(cachedData);
+    }
+
+    console.log(`🔄 Consultando API de Mailchimp para campaña ${campaignId}...`);
+
     const response = await axios.get(
       `${MAILCHIMP_BASE_URL}/campaigns/${campaignId}`,
       {
@@ -466,7 +505,7 @@ const getCampaignById = async (req, res) => {
 
     const campaign = response.data;
 
-    res.status(200).json({
+    const responseData = {
       success: true,
       data: {
         id: campaign.id,
@@ -491,7 +530,13 @@ const getCampaignById = async (req, res) => {
         report_summary: campaign.report_summary,
         delivery_status: campaign.delivery_status
       }
-    });
+    };
+
+    // Guardar en caché
+    await mailchimpCache.set(cacheKey, responseData, MailchimpCacheTTL.CAMPAIGN_DETAIL);
+    console.log(`💾 Detalles de campaña ${campaignId} guardados en caché`);
+
+    res.status(200).json(responseData);
 
   } catch (error) {
     console.error('❌ Error al obtener campaña:', error.response?.data || error.message);
@@ -525,6 +570,17 @@ const getCampaignContent = async (req, res) => {
         message: 'ID de campaña es requerido'
       });
     }
+
+    // Verificar caché primero
+    const cacheKey = `${MailchimpCacheKeys.CONTENT}:${campaignId}`;
+    const cachedData = await mailchimpCache.get(cacheKey);
+    
+    if (cachedData) {
+      console.log(`📄 Contenido de campaña ${campaignId} obtenido del caché`);
+      return res.status(200).json(cachedData);
+    }
+
+    console.log(`🔄 Consultando API de Mailchimp para contenido de campaña ${campaignId}...`);
 
     const response = await axios.get(
       `${MAILCHIMP_BASE_URL}/campaigns/${campaignId}/content`,
@@ -561,7 +617,7 @@ const getCampaignContent = async (req, res) => {
     const plainTextContent = content.plain_text || '';
     const images = extractImages(htmlContent);
 
-    res.status(200).json({
+    const responseData = {
       success: true,
       data: {
         campaign_id: campaignId,
@@ -572,7 +628,13 @@ const getCampaignContent = async (req, res) => {
         archive_html: content.archive_html || '',
         _links: content._links || []
       }
-    });
+    };
+
+    // Guardar en caché
+    await mailchimpCache.set(cacheKey, responseData, MailchimpCacheTTL.CONTENT);
+    console.log(`💾 Contenido de campaña ${campaignId} guardado en caché`);
+
+    res.status(200).json(responseData);
 
   } catch (error) {
     console.error('❌ Error al obtener contenido de campaña:', error.response?.data || error.message);

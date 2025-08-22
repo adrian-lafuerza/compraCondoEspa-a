@@ -17,7 +17,7 @@ export const mailchimpService = {
       // Parámetros por defecto
       const defaultParams = {
         status: 'sent', // Solo campañas enviadas por defecto
-        count: 3,
+        count: 100, // Obtener más campañas para el caché
         offset: 0,
         ...params
       };
@@ -37,7 +37,7 @@ export const mailchimpService = {
 
       const result = await response.json();
       // El backend devuelve {success: true, data: {campaigns: [...], total_items: ...}}
-      return result.data || result;
+      return result;
     } catch (error) {
       console.error('Error fetching campaigns:', error);
       throw error;
@@ -78,77 +78,12 @@ export const mailchimpService = {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return data;
+      const result = await response.json();
+      
+      // El backend devuelve {success: true, data: {html: ..., plain_text: ..., images: [...]}}
+      return result;
     } catch (error) {
       console.error('Error fetching campaign content:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Obtener solo las imágenes de una campaña
-   * @param {string} campaignId - ID de la campaña
-   * @returns {Promise<Object>} Lista de imágenes con metadatos
-   */
-  async getCampaignImages(campaignId) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/mailchimp/campaigns/${campaignId}/images`);
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      // El backend devuelve {success: true, data: {images: [...], thumbnail: ...}}
-      if (result.success && result.data) {
-        return result;
-      } else {
-        // Si no tiene la estructura esperada, asumir que result es directamente la data
-        return { success: true, data: result };
-      }
-    } catch (error) {
-      console.error('Error fetching campaign images:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Obtener estadísticas de la lista de Mailchimp
-   * @returns {Promise<Object>} Estadísticas de la lista
-   */
-  async getListStats() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/mailchimp/list/stats`);
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error fetching list stats:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Verificar el estado de la conexión con Mailchimp
-   * @returns {Promise<Object>} Estado de la conexión
-   */
-  async healthCheck() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/mailchimp/health`);
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error('Error checking Mailchimp health:', error);
       throw error;
     }
   },
@@ -184,31 +119,6 @@ export const mailchimpService = {
       reply_to: campaign.reply_to
     };
   },
-
-  /**
-   * Obtener campañas con imágenes (thumbnail)
-   * @param {Object} params - Parámetros de filtrado
-   * @returns {Promise<Array>} Array de campañas con thumbnails
-   */
-  async getCampaignsWithThumbnails(params = {}) {
-    try {
-      const campaignsResponse = await this.getCampaigns(params);
-      const campaigns = campaignsResponse.campaigns || [];
-
-      // Transformar campañas - ya incluyen imágenes y descripciones del backend
-      const campaignsWithThumbnails = campaigns.map(campaign => {
-        return this.transformCampaign(campaign);
-      });
-
-      return {
-        campaigns: campaignsWithThumbnails,
-        total_items: campaignsResponse.total_items || campaigns.length
-      };
-    } catch (error) {
-      console.error('Error fetching campaigns with thumbnails:', error);
-      throw error;
-    }
-  }
 };
 
 export default mailchimpService;
