@@ -16,6 +16,7 @@ const PropertiesPage = () => {
     loadProperties,
     searchByLocation,
     searchByZone,
+    searchByNewProperty,
     filters,
     updateFilters,
     hasAttemptedLoad
@@ -23,11 +24,12 @@ const PropertiesPage = () => {
   const [title, setTitle] = useState('')
   const [lastSearchParams, setLastSearchParams] = useState('')
   const functionsRef = useRef({ searchByLocation, searchByZone, loadProperties })
-  
-  // Actualizar las funciones en el ref cuando cambien
-  useEffect(() => {
-    functionsRef.current = { searchByLocation, searchByZone, loadProperties };
-  }, [searchByLocation, searchByZone, loadProperties]);
+
+  // Estado para el toggle de filtros en móvil
+  const [showFilters, setShowFilters] = useState(true)
+
+  // Actualizar las funciones en el ref
+  functionsRef.current = { searchByLocation, searchByZone, searchByNewProperty, loadProperties };
 
   // Estado local para filtros de la UI
   const [localFilters, setLocalFilters] = useState({
@@ -49,6 +51,34 @@ const PropertiesPage = () => {
     }));
   }, []);
 
+  // Función para manejar el toggle de filtros en móvil
+  const handleToggleFilters = useCallback(() => {
+    setShowFilters(prev => !prev);
+  }, []);
+
+  // Función para recargar propiedades
+  const handleReloadProperties = useCallback(() => {
+    const locationParam = searchParams.get('location');
+    const zoneParam = searchParams.get('zone');
+    const newPropertyParam = searchParams.get('newProperty');
+
+    if (newPropertyParam) {
+      functionsRef.current.searchByNewProperty(newPropertyParam, locationParam);
+    } else if (locationParam) {
+      const zoneValues = ['costa-blanca', 'costa-del-sol', 'barcelona', 'inversion', 'preconstruccion'];
+
+      if (zoneValues.includes(locationParam)) {
+        functionsRef.current.searchByZone(locationParam);
+      } else {
+        functionsRef.current.searchByLocation(locationParam);
+      }
+    } else if (zoneParam) {
+      functionsRef.current.searchByZone(zoneParam);
+    } else {
+      functionsRef.current.loadProperties();
+    }
+  }, [searchParams]);
+
   // Estado para las propiedades filtradas
   const [filteredProperties, setFilteredProperties] = useState(properties || []);
 
@@ -69,37 +99,37 @@ const PropertiesPage = () => {
     if (!propertiesToFilter || propertiesToFilter.length === 0) {
       return [];
     }
-    
+
     const filtered = propertiesToFilter.filter(property => {
-      
+
       // Filtro por localidad
       if (filters.location && filters.location !== '') {
         const propertyLocation = property.location?.toLowerCase() || '';
         const propertyZone = property.zone?.toLowerCase() || '';
         const propertyAddress = property.address?.streetName?.toLowerCase() || '';
-        
+
         const searchLocation = filters.location.toLowerCase();
-        
+
         // Mapear localidades según la fuente de datos
         let locationMatch = false;
-        
+
         if (searchLocation === 'costa-blanca') {
-          locationMatch = propertyZone.includes('costa-blanca') || propertyZone.includes('costa blanca') || 
-                         propertyLocation.includes('alicante') || propertyLocation.includes('valencia') ||
-                         propertyAddress.includes('alicante') || propertyAddress.includes('valencia');
+          locationMatch = propertyZone.includes('costa-blanca') || propertyZone.includes('costa blanca') ||
+            propertyLocation.includes('alicante') || propertyLocation.includes('valencia') ||
+            propertyAddress.includes('alicante') || propertyAddress.includes('valencia');
         } else if (searchLocation === 'costa-del-sol') {
           locationMatch = propertyZone.includes('costa-del-sol') || propertyZone.includes('costa del sol') ||
-                         propertyLocation.includes('málaga') || propertyLocation.includes('malaga') ||
-                         propertyAddress.includes('málaga') || propertyAddress.includes('malaga');
+            propertyLocation.includes('málaga') || propertyLocation.includes('malaga') ||
+            propertyAddress.includes('málaga') || propertyAddress.includes('malaga');
         } else if (searchLocation === 'madrid') {
           locationMatch = propertyLocation.includes('madrid') || propertyAddress.includes('madrid');
         }
-        
+
         if (!locationMatch) {
           return false;
         }
       }
-      
+
       // Filtro por precio mínimo
       if (filters.minPrice && filters.minPrice !== '') {
         const minPrice = parseFloat(filters.minPrice);
@@ -107,7 +137,7 @@ const PropertiesPage = () => {
           return false;
         }
       }
-      
+
       // Filtro por precio máximo
       if (filters.maxPrice && filters.maxPrice !== '') {
         const maxPrice = parseFloat(filters.maxPrice);
@@ -115,7 +145,7 @@ const PropertiesPage = () => {
           return false;
         }
       }
-      
+
       // Filtro por tamaño mínimo
       if (filters.minSize && filters.minSize !== '') {
         const minSize = parseFloat(filters.minSize);
@@ -123,7 +153,7 @@ const PropertiesPage = () => {
           return false;
         }
       }
-      
+
       // Filtro por tamaño máximo
       if (filters.maxSize && filters.maxSize !== '') {
         const maxSize = parseFloat(filters.maxSize);
@@ -131,20 +161,20 @@ const PropertiesPage = () => {
           return false;
         }
       }
-      
+
       // Filtro por número de habitaciones
       if (filters.rooms && filters.rooms !== '' && property.features.rooms !== parseInt(filters.rooms)) {
         return false;
       }
-      
+
       // Filtro por número de baños
       if (filters.bathrooms && filters.bathrooms !== '' && property.features.bathroomNumber !== parseInt(filters.bathrooms)) {
         return false;
       }
-      
+
       return true;
     });
-    
+
     // Aplicar ordenamiento por precio si está seleccionado
     if (filters.sortByPrice) {
       if (filters.sortByPrice === 'highest') {
@@ -153,7 +183,7 @@ const PropertiesPage = () => {
         filtered.sort((a, b) => a.operation.price - b.operation.price);
       }
     }
-    
+
     return filtered;
   }, []);
 
@@ -166,9 +196,9 @@ const PropertiesPage = () => {
       setFilteredProperties([]);
       return;
     }
-    
+
     const hasFilters = Object.values(debouncedFilters).some(value => value !== '' && value !== null && value !== undefined);
-    
+
     if (hasFilters) {
       const filtered = filterPropertiesLocally(properties, debouncedFilters);
       setFilteredProperties(filtered);
@@ -177,83 +207,73 @@ const PropertiesPage = () => {
     }
   }, [debouncedFilters, properties]); // Ejecutar cuando cambien los filtros con debounce o las propiedades
 
+  // Extraer parámetros de URL para usarlos como dependencias
+  const locationParam = searchParams.get('location');
+  const zoneParam = searchParams.get('zone');
+  const newPropertyParam = searchParams.get('newProperty');
+
   useEffect(() => {
+
+    const locationMapping = {
+      'madrid': 'Madrid'
+    };
+
+    const zoneMapping = {
+      'barcelona': 'Barcelona',
+      'costa-del-sol': 'Costa del Sol',
+      'costa-blanca': 'Costa Blanca',
+      'inversion': 'Inversión',
+      'preconstruccion': 'Preconstrucción',
+    };
     // Scroll automático al top cuando se accede a la página
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Cargar propiedades basado en parámetros de URL
-    const locationParam = searchParams.get('location');
-    const zoneParam = searchParams.get('zone');
-    
     console.log('PropertiesPage: locationParam =', locationParam);
     console.log('PropertiesPage: zoneParam =', zoneParam);
-    
+    console.log('PropertiesPage: newPropertyParam =', newPropertyParam);
+
     // Crear una clave única para los parámetros actuales
-    const currentParamsKey = `${locationParam || ''}-${zoneParam || ''}`;
-    
+    const currentParamsKey = `location:${locationParam || 'none'}-zone:${zoneParam || 'none'}-newProperty:${newPropertyParam || 'none'}`;
+
     console.log('PropertiesPage useEffect: Parámetros actuales:', currentParamsKey);
     console.log('PropertiesPage useEffect: Últimos parámetros:', lastSearchParams);
-    
-    // Solo evitar ejecución si es exactamente la misma carga inicial Y no hay cambio de tipo de parámetro
-    const hasLocationParam = !!locationParam;
-    const hasZoneParam = !!zoneParam;
-    const lastHadLocation = lastSearchParams.includes('-') ? lastSearchParams.split('-')[0] !== '' : false;
-    const lastHadZone = lastSearchParams.includes('-') ? lastSearchParams.split('-')[1] !== '' : false;
-    
-    // Permitir ejecución si:
-    // 1. Los parámetros han cambiado
-    // 2. Hay cambio de tipo (de zone a location o viceversa)
-    // 3. Es la primera carga
-    const shouldExecute = lastSearchParams !== currentParamsKey || 
-                         hasLocationParam !== lastHadLocation || 
-                         hasZoneParam !== lastHadZone || 
-                         lastSearchParams === '';
-    
-    if (!shouldExecute) {
-      console.log('PropertiesPage useEffect: Parámetros no han cambiado, saltando');
+
+    // Solo ejecutar si los parámetros han cambiado
+    if (lastSearchParams === currentParamsKey) {
       return;
     }
-    
-    // Actualizar los últimos parámetros de búsqueda
-    console.log('PropertiesPage useEffect: Ejecutando carga de propiedades...');
+
     setLastSearchParams(currentParamsKey);
 
-    if (locationParam) {
-      // Verificar si el parámetro location es realmente una zona
+    if (newPropertyParam) {
+      // Usar searchByNewProperty para el parámetro newProperty, con localidad opcional
+      functionsRef.current.searchByNewProperty(newPropertyParam, locationParam);
+
+      const newPropertyMapping = {
+        'inversion': 'Inversión',
+        'preconstruccion': 'Preconstrucción'
+      };
+
+      let title = newPropertyMapping[newPropertyParam] || newPropertyParam;
+      if (locationParam) {
+        title += ` en ${zoneMapping[locationParam] || locationMapping[locationParam] || locationParam}`;
+      }
+      setTitle(title);
+    } else if (locationParam) {
+      // Solo verificar si el parámetro location es una zona cuando NO hay newPropertyParam
+      // Esto evita interferir con el filtrado combinado newProperty + location
       const zoneValues = ['costa-blanca', 'costa-del-sol', 'barcelona', 'inversion', 'preconstruccion'];
-      
+
       if (zoneValues.includes(locationParam)) {
         // Es una zona, usar searchByZone
-        console.log('PropertiesPage useEffect: Loading location as zone', locationParam);
-        console.log('PropertiesPage: functionsRef.current =', functionsRef.current);
-        console.log('PropertiesPage: searchByZone function =', functionsRef.current.searchByZone);
         functionsRef.current.searchByZone(locationParam);
-        
-        const zoneMapping = {
-          'barcelona': 'Barcelona',
-          'costa-del-sol': 'Costa del Sol',
-          'costa-blanca': 'Costa Blanca',
-          'inversion': 'Inversión',
-          'preconstruccion': 'Preconstrucción'
-        };
         setTitle(zoneMapping[locationParam] || locationParam);
       } else {
-        // Es una ubicación real, usar searchByLocation
-        console.log('PropertiesPage useEffect: Loading location', locationParam);
-        console.log('PropertiesPage: functionsRef.current =', functionsRef.current);
-        console.log('PropertiesPage: searchByLocation function =', functionsRef.current.searchByLocation);
         functionsRef.current.searchByLocation(locationParam);
         // Mapear títulos para ubicaciones específicas
-        const locationMapping = {
-          'madrid': 'Madrid'
-        };
         setTitle(locationMapping[locationParam] || locationParam.charAt(0).toUpperCase() + locationParam.slice(1));
       }
     } else if (zoneParam) {
-      // Si hay un parámetro de zona en la URL, buscar por esa zona
-      console.log('PropertiesPage useEffect: Loading zone', zoneParam);
-      console.log('PropertiesPage: functionsRef.current =', functionsRef.current);
-      console.log('PropertiesPage: searchByZone function =', functionsRef.current.searchByZone);
       functionsRef.current.searchByZone(zoneParam);
       const zoneMapping = {
         'barcelona': 'Barcelona',
@@ -274,9 +294,9 @@ const PropertiesPage = () => {
       // Si no hay parámetros de URL, establecer título por defecto
       setTitle('Todas las Propiedades');
     }
-    
 
-  }, [searchParams]); // Solo depende de searchParams para detectar cambios de URL
+
+  }, [locationParam, zoneParam, newPropertyParam, properties.length, hasAttemptedLoad]); // Dependencias específicas para evitar re-renders innecesarios
 
   // Función para limpiar filtros
   const handleClearFilters = useCallback(() => {
@@ -294,28 +314,11 @@ const PropertiesPage = () => {
     // que mostrará todas las propiedades cuando no hay filtros
   }, []);
 
-  // Función para recargar propiedades respetando el contexto actual
-  const handleReloadProperties = useCallback(() => {
-    const locationParam = searchParams.get('location');
-    const zoneParam = searchParams.get('zone');
 
-    if (locationParam) {
-      const zoneValues = ['costa-blanca', 'costa-del-sol', 'barcelona', 'inversion', 'preconstruccion'];
-      if (zoneValues.includes(locationParam)) {
-        searchByZone(locationParam);
-      } else {
-        searchByLocation(locationParam);
-      }
-    } else if (zoneParam) {
-      searchByZone(zoneParam);
-    } else {
-      loadProperties();
-    }
-  }, [searchParams, searchByLocation, searchByZone, loadProperties]);
-  
+
 
   return (
-    <div className="min-h-screen animate-fadeIn">
+    <div className="min-h-screen">
       {/* Hero Section */}
       <PropertiesHeroSection title={title} />
 
@@ -323,11 +326,34 @@ const PropertiesPage = () => {
       <Breadcrumb />
 
       {/* Sección de propiedades con filtros */}
-      <div className="bg-gray-50 min-h-[40vh] animate-slideUp">
-        <div className="xl:max-w-[80%] lg:max-w-[90%] md:max-w-[100%] sm:max-w-[100%] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <div className="bg-gray-50 min-h-[40vh]">
+        <div className="xl:max-w-[90%] lg:max-w-[100%] md:max-w-[100%] sm:max-w-[100%] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+
+          {/* Botón toggle para filtros en móvil */}
+          <button
+            onClick={handleToggleFilters}
+            className="lg:hidden mb-5 cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-xs md:text-sm bg-[#0E0E0E] text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
+          >
+            {showFilters ? (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+                Ocultar Filtros
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Mostrar Filtros
+              </>
+            )}
+          </button>
           <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
             {/* Sidebar de filtros */}
-            <div className="w-full lg:w-[25%] lg:flex-shrink-0 order-1">
+            <div className={`w-full lg:w-[25%] lg:flex-shrink-0 order-1 ${showFilters ? 'block' : 'hidden'
+              } lg:block`}>
               <FilterSidebar
                 localFilters={localFilters}
                 handleFilterChange={handleFilterChange}
@@ -337,9 +363,9 @@ const PropertiesPage = () => {
             </div>
 
             {/* Área principal de propiedades */}
-            <div className="flex-1 animate-slideInRight order-2">
+            <div className="flex-1 order-2">
               <div className="mb-4 lg:mb-6 bg-white rounded-lg shadow-md p-3 sm:p-4 lg:p-6">
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-2 animate-fadeInUp text-center lg:text-left">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-2 text-center lg:text-left">
                   {filteredProperties?.length > 0 ? filteredProperties?.length : 0} Resultados encontrados
                 </h2>
               </div>
@@ -378,7 +404,7 @@ const PropertiesPage = () => {
                   })()}
                   {filteredProperties.length > 0 ? (
                     filteredProperties.map((property, index) => (
-                      <PropertyCard key={property.propertyId} property={property} index={index} />
+                      <PropertyCard key={`${property.propertyId}-${index}`} property={property} index={index} />
                     ))
                   ) : (
                     <div className="text-center py-8 lg:py-12">
@@ -392,7 +418,7 @@ const PropertiesPage = () => {
                         <p className="text-gray-600 text-sm mb-4">No hay propiedades disponibles con los filtros actuales.</p>
                         <button
                           onClick={handleReloadProperties}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                         >
                           Recargar propiedades
                         </button>

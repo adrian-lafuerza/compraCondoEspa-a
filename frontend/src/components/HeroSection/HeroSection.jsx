@@ -45,18 +45,37 @@ export const HeroSection = () => {
             {/* Content */}
             <div className="relative z-10 h-full flex items-center">
                 <div className="w-full px-4 sm:px-8 md:px-12 lg:px-16">
-                    <div className=" sm:max-w-[90%] md:max-w-[80%] lg:max-w-[45%]">
-                        <h1 className="font-work-sans font-bold text-white leading-tight mb-8 sm:mb-8 md:mb-8 text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[90px] animate-heroFadeIn">
-                            Encuentra tu propiedad perfecta en España
+                    <div className="w-full flex flex-col justify-center min-h-[60vh]">
+                        <h1 
+                            className="font-work-sans font-bold text-white leading-tight mb-6 sm:mb-8 animate-heroFadeIn"
+                            style={{
+                                fontSize: 'clamp(2.5rem, 8vw, 6rem)'
+                            }}
+                        >
+                            <div>Encuentra tu</div>
+                            <div>propiedad perfecta</div>
+                            <div>en España</div>
                         </h1>
                         
-                        <p className="text-sm sm:text-base md:text-lg lg:text-[16px] text-white/90 leading-relaxed mb-6 sm:mb-8 max-w-full sm:max-w-2xl animate-heroSlideUp delay-200 mt-6">
-                            Asesoro personalmente a compradores e inversores de Latinoamérica y España que quieren proteger su patrimonio comprando en el sur de la Florida o en España.
-                        </p>
+                        <div 
+                            className="text-white/90 leading-relaxed mb-6 sm:mb-8 animate-heroSlideUp delay-200"
+                            style={{
+                                fontSize: 'clamp(0.875rem, 2.2vw, 1.125rem)',
+                                maxWidth: 'clamp(300px, 85vw, 600px)'
+                            }}
+                        >
+                            <div className="block">Asesoro personalmente a compradores e inversores de Latinoamérica y</div>
+                            <div className="block">España que quieren proteger su patrimonio comprando en el sur de la</div>
+                            <div className="block">Florida o en España.</div>
+                        </div>
                         
                         <button 
                             onClick={handleExploreProperties}
-                            className="cursor-pointer font-work-sans bg-[#0E0E0E] border-2 border-white text-white px-2 sm:px-6 md:px-6 py-2 sm:py-3 rounded-lg hover:bg-white hover:text-[#0E0E0E] transition-all duration-300 font-medium text-[16px] sm:text-base animate-heroSlideUp delay-400 hover-lift animate-buttonPulse"
+                            className="cursor-pointer font-work-sans bg-[#0E0E0E] border-2 border-white text-white rounded-lg hover:bg-white hover:text-[#0E0E0E] transition-all duration-300 font-medium animate-heroSlideUp delay-400 hover-lift animate-buttonPulse w-fit whitespace-nowrap"
+                            style={{
+                                fontSize: 'clamp(0.875rem, 1.8vw, 1rem)',
+                                padding: 'clamp(0.75rem, 1.5vw, 1rem) clamp(1.5rem, 3vw, 2rem)'
+                            }}
                         >
                             Explorar Propiedades
                         </button>

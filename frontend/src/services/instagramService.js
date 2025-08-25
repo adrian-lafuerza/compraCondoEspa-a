@@ -72,8 +72,8 @@ export const instagramService = {
         "updatedAt": "2025-08-21T21:46:48.261Z"
       },
       {
-        "id": "6MkW2yuFyk7BlKlCxL3sTn",
-        "title": "Reel 1",
+        "id": "7NlX3zvGzl8CmLmDyM4uTo",
+        "title": "Reel 2",
         "instagramUrl": "https://www.instagram.com/p/DNjX8A-xiEW/",
         "embedUrl": "https://www.instagram.com/p/DNjX8A-xiEW/embed",
         "likes": 0,
@@ -82,8 +82,8 @@ export const instagramService = {
         "updatedAt": "2025-08-21T21:46:48.261Z"
       },
       {
-        "id": "6MkW2yuFyk7BlKlCxL3sTn",
-        "title": "Reel 1",
+        "id": "8OmY4awHam9DnNnEzN5vUp",
+        "title": "Reel 3",
         "instagramUrl": "https://www.instagram.com/p/DNjX8A-xiEW/",
         "embedUrl": "https://www.instagram.com/p/DNjX8A-xiEW/embed",
         "likes": 0,

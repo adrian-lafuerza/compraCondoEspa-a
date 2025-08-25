@@ -179,7 +179,7 @@ const PropertyDetailPage = () => {
   
 
   return (
-    <div className="md:max-w-[65vw] mx-auto min-h-screen bg-gray-50 animate-fadeIn pb-4 px-4 sm:px-6 md:px-0">
+    <div className="md:max-w-[90vw] xl:max-w-[80vw] lg:max-w-[90vw] mx-auto min-h-screen bg-gray-50 animate-fadeIn pb-4 px-4 sm:px-6 md:px-0">
       {/* Breadcrumb Navigation */}
       <Breadcrumb 
         customItems={[
@@ -219,7 +219,7 @@ const PropertyDetailPage = () => {
                 if (index >= 3) {
                   return (
                     <div
-                      key={image.imageId}
+                      key={`${image.imageId}-${index}`}
                       className="hidden md:block relative cursor-pointer overflow-hidden group bg-gray-200 max-h-[275px]"
                       onClick={() => openModal(index + 1)}
                     >

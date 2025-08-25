@@ -467,22 +467,53 @@ html {
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-50px);
+    transform: translateY(-20px);
+    max-height: 0;
   }
   to {
     opacity: 1;
     transform: translateY(0);
+    max-height: 1000px;
   }
 }
 
 @keyframes slideUp {
   from {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 1000px;
+  }
+  to {
     opacity: 0;
-    transform: translateY(50px);
+    transform: translateY(-20px);
+    max-height: 0;
+  }
+}
+
+/* Animaciones específicas para filtros móviles */
+@keyframes mobileFilterSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
   }
   to {
     opacity: 1;
     transform: translateY(0);
+    max-height: 800px;
+  }
+}
+
+@keyframes mobileFilterSlideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 800px;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+    max-height: 0;
   }
 }
 
@@ -545,6 +576,17 @@ html {
 
 .animate-slideInRight {
   animation: slideInRight 0.6s ease-out;
+}
+
+/* Clases para animaciones específicas de filtros móviles */
+.animate-mobileFilterSlideDown {
+  animation: mobileFilterSlideDown 0.3s ease-out;
+  overflow: hidden;
+}
+
+.animate-mobileFilterSlideUp {
+  animation: mobileFilterSlideUp 0.3s ease-out;
+  overflow: hidden;
 }
 
 /* Nuevas animaciones para la página principal */
@@ -786,26 +828,33 @@ html {
     transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-/* Animación de scroll horizontal infinito */
-.banner-marquee {
-    overflow: hidden;
-    width: 100%;
-    position: relative;
-    display: flex;
-    align-items: center;
-    padding: 2rem 1.5rem;
-    color: white;
-    font-weight: 600;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(0, 0, 0, 0.2);
+/* Marquee Animation */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
-.banner-marquee-content {
-    display: flex;
-    white-space: nowrap;
-    position: absolute;
-    will-change: transform;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-    gap: 0.5rem;
-    align-items: center;
-    flex-wrap: nowrap;
+.marquee {
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+  box-shadow: 0 50px 60px 0px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(0, 0, 0, 0.07);
+}
+
+.marquee__content {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-around;
+  min-width: 200%;
+  animation: scroll 12s linear infinite;
+}
+
+@media (max-width: 768px) {
+  .marquee__content {
+    animation: scroll 15s linear infinite;
+  }
 }

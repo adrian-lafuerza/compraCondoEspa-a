@@ -245,6 +245,37 @@ export const PropertyProvider = ({ children }) => {
   }, []);
 
   /**
+   * Buscar propiedades por newProperty (Inversión/Preconstrucción) y opcionalmente por localidad
+   * @param {string} newProperty - Tipo de nueva propiedad ('inversion' o 'preconstruccion')
+   * @param {string} location - Localidad específica (opcional)
+   */
+  const searchByNewProperty = useCallback(async (newProperty, location = null) => {
+    try {
+      setLoading(true);
+      setError(null);
+      setHasAttemptedLoad(true);
+
+      console.log('PropertyContext: Searching by newProperty:', newProperty, 'and location:', location);
+      const response = await propertyService.getPropertiesByNewPropertyAndLocation(newProperty, location);
+      console.log('PropertyContext: Properties found:', response);
+
+      // La respuesta viene como { success: true, data: { properties: [...] } }
+      if (response && response.success && response.data && response.data.properties && Array.isArray(response.data.properties)) {
+        setProperties(response.data.properties);
+        setError(null);
+      } else {
+        throw new Error(response.message || 'Formato de respuesta inválido del servidor');
+      }
+    } catch (err) {
+      console.error('PropertyContext: Error searching by newProperty:', err);
+      setError(err.message);
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  /**
    * Actualizar filtros de búsqueda
    * @param {Object} newFilters - Nuevos filtros
    */
@@ -300,6 +331,7 @@ export const PropertyProvider = ({ children }) => {
     loadPropertyById,
     searchByLocation,
     searchByZone,
+    searchByNewProperty,
     updateFilters,
     applyFilters,
     clearFilters,
@@ -315,6 +347,7 @@ export const PropertyProvider = ({ children }) => {
     loadPropertyById,
     searchByLocation,
     searchByZone,
+    searchByNewProperty,
     updateFilters,
     applyFilters,
     clearFilters

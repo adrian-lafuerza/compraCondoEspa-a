@@ -1,13 +1,15 @@
 import { useInstagram } from '../../context/InstagramContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 const ConnectSection = () => {
   const { instagramPosts, loading, error, refetch } = useInstagram();
   const [currentIndex, setCurrentIndex] = useState(0);
-
-  const handleNavigation = (newIndex) => {
-    setCurrentIndex(newIndex);
-  };
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
+  const carouselRef = useRef(null);
+  const startPosRef = useRef(0);
+  const currentTranslateRef = useRef(0);
 
   const getVisibleItems = () => {
     if (typeof window !== 'undefined') {
@@ -20,6 +22,102 @@ const ConnectSection = () => {
 
   const [visibleItems, setVisibleItems] = useState(getVisibleItems());
 
+  const handleNavigation = useCallback((newIndex) => {
+    const maxIndex = Math.max(0, instagramPosts.length - 1);
+    const clampedIndex = Math.max(0, Math.min(maxIndex, newIndex));
+    setCurrentIndex(clampedIndex);
+    currentTranslateRef.current = -clampedIndex * (100 / visibleItems);
+  }, [instagramPosts.length, visibleItems]);
+
+  // Drag functionality
+  const handleDragStart = useCallback((clientX) => {
+    setIsDragging(true);
+    setDragStart(clientX);
+    startPosRef.current = currentTranslateRef.current;
+    if (carouselRef.current) {
+      carouselRef.current.style.transition = 'none';
+    }
+  }, []);
+
+  const handleDragMove = useCallback((clientX) => {
+    if (!isDragging) return;
+    
+    const diff = clientX - dragStart;
+    const containerWidth = carouselRef.current?.offsetWidth || 1;
+    const dragPercentage = (diff / containerWidth) * 100;
+    
+    setDragOffset(dragPercentage);
+    
+    if (carouselRef.current) {
+      carouselRef.current.style.transform = `translateX(${startPosRef.current + dragPercentage}%)`;
+    }
+  }, [isDragging, dragStart]);
+
+  const handleDragEnd = useCallback(() => {
+    if (!isDragging) return;
+    
+    setIsDragging(false);
+    
+    if (carouselRef.current) {
+      carouselRef.current.style.transition = 'transform 0.3s ease-out';
+    }
+    
+    // Determine if we should move to next/previous slide
+    const threshold = 50; // pixels
+    const containerWidth = carouselRef.current?.offsetWidth || 1;
+    const dragDistance = Math.abs(dragOffset * containerWidth / 100);
+    
+    if (dragDistance > threshold) {
+      if (dragOffset > 0 && currentIndex > 0) {
+        // Dragged right, go to previous
+        handleNavigation(currentIndex - 1);
+      } else if (dragOffset < 0 && currentIndex < instagramPosts.length - 1) {
+        // Dragged left, go to next
+        handleNavigation(currentIndex + 1);
+      } else {
+        // Snap back to current position
+        if (carouselRef.current) {
+          carouselRef.current.style.transform = `translateX(${currentTranslateRef.current}%)`;
+        }
+      }
+    } else {
+      // Snap back to current position
+      if (carouselRef.current) {
+        carouselRef.current.style.transform = `translateX(${currentTranslateRef.current}%)`;
+      }
+    }
+    
+    setDragOffset(0);
+  }, [isDragging, dragOffset, currentIndex, instagramPosts.length, handleNavigation]);
+
+  // Mouse events
+  const handleMouseDown = (e) => {
+    e.preventDefault();
+    handleDragStart(e.clientX);
+  };
+
+  const handleMouseMove = (e) => {
+    handleDragMove(e.clientX);
+  };
+
+  const handleMouseUp = () => {
+    handleDragEnd();
+  };
+
+  // Touch events
+  const handleTouchStart = (e) => {
+    handleDragStart(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    e.preventDefault();
+    handleDragMove(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    handleDragEnd();
+  };
+
   useEffect(() => {
     const handleResize = () => {
       setVisibleItems(getVisibleItems());
@@ -30,6 +128,31 @@ const ConnectSection = () => {
       return () => window.removeEventListener('resize', handleResize);
     }
   }, []);
+
+  // Global mouse events for drag
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
+
+  // Update transform when currentIndex changes
+  useEffect(() => {
+    if (!isDragging && carouselRef.current) {
+      currentTranslateRef.current = -currentIndex * (100 / visibleItems);
+      carouselRef.current.style.transform = `translateX(${currentTranslateRef.current}%)`;
+    }
+  }, [currentIndex, visibleItems, isDragging]);
 
   return (
     <section className="py-12 md:py-16 lg:py-20 bg-gray-100">
@@ -64,19 +187,23 @@ const ConnectSection = () => {
         )}
         {!loading && (
           <div className="relative">
-            <div className="overflow-hidden">
+            <div className="overflow-hidden px-4 md:px-6 lg:px-8">
               <div
-                className="flex transition-transform duration-500 ease-in-out"
+                ref={carouselRef}
+                className={`flex transition-transform duration-500 ease-in-out ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} py-10`}
                 style={{
                   transform: `translateX(-${currentIndex * (100 / visibleItems)}%)`
                 }}
+                onMouseDown={handleMouseDown}
+                onTouchStart={handleTouchStart}
+                onDragStart={(e) => e.preventDefault()}
               >
                 {instagramPosts.map((item, index) => (
                   <div
                     key={item.id}
                     className="w-full md:w-1/2 lg:w-1/3 flex-shrink-0 px-2 md:px-3 lg:px-4"
                   >
-                    <div className="bg-white rounded-xl md:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl hover:-translate-y-1 md:hover:-translate-y-2 transition-all duration-300 transform">
+                    <div className="bg-white rounded-xl md:rounded-2xl shadow-lg overflow-hidden hover:shadow-xl hover:-translate-y-1 md:hover:-translate-y-2 transition-all duration-300 transform select-none">
                       <div className="relative w-full h-[500px] md:h-[600px] lg:h-[700px]">
                         <iframe
                           src={item.embedUrl}
@@ -84,10 +211,10 @@ const ConnectSection = () => {
                           height="100%"
                           frameBorder="0"
                           scrolling="no"
-                          allowTransparency="true"
+                          allowtransparency="true"
                           allow="encrypted-media"
                           title={`Instagram post ${item.id}`}
-                          className="w-full h-full"
+                          className="w-full h-full pointer-events-none"
                         ></iframe>
                       </div>
                     </div>
@@ -95,10 +222,10 @@ const ConnectSection = () => {
                 ))}
               </div>
             </div>
-            {instagramPosts.length > visibleItems && (
-              <div className="flex lg:justify-start md:justify-center mt-6 md:mt-8 space-x-3 md:space-x-4">
+            {instagramPosts.length > 1 && (
+              <div className="flex lg:justify-start md:justify-center space-x-3 md:space-x-4">
                 <button
-                  onClick={() => handleNavigation(Math.max(0, currentIndex - 1))}
+                  onClick={() => handleNavigation(currentIndex - 1)}
                   disabled={currentIndex === 0}
                   className="cursor-pointer group hover:-translate-y-1 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-300"
                 >
@@ -128,8 +255,8 @@ const ConnectSection = () => {
                   </div>
                 </button>
                 <button
-                  onClick={() => handleNavigation(Math.min(instagramPosts.length - visibleItems, currentIndex + 1))}
-                  disabled={currentIndex >= instagramPosts.length - visibleItems}
+                  onClick={() => handleNavigation(currentIndex + 1)}
+                  disabled={currentIndex >= instagramPosts.length - 1}
                   className="cursor-pointer group hover:-translate-y-1 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-300"
                 >
                   <div className="relative w-12 h-12 md:w-16 md:h-16 lg:w-16 lg:h-16">
@@ -156,7 +283,6 @@ const ConnectSection = () => {
                       />
                     </svg>
                   </div>
-
                 </button>
               </div>
             )}

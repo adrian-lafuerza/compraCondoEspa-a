@@ -103,7 +103,7 @@ const CampaignDetailPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#f4f4f4]">
             {/* Header con breadcrumbs */}
             <div className="bg-white shadow-sm">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -122,68 +122,65 @@ const CampaignDetailPage = () => {
 
             {/* Contenido principal */}
             <div className="max-w-6xl h-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="bg-white rounded-lg shadow-sm">
-                    {content ? (
-                        <div className="p-6">
-                            {/* Contenido HTML */}
-                            {content.html && (
-                                <div className="mb-8">
-                                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Contenido</h2>
-                                    <div className="campaign-content-container">
-                                        <iframe
-                                            srcDoc={`
-                                                <!DOCTYPE html>
-                                                <html>
-                                                <head>
-                                                    <meta charset="utf-8">
-                                                    <meta name="viewport" content="width=device-width, initial-scale=1">
-                                                    <style>
-                                                        body {
-                                                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                                                            line-height: 1.6;
-                                                            color: #374151;
-                                                            margin: 0;
-                                                            padding: 20px;
-                                                            background: white;
-                                                        }
-                                                        img { max-width: 100%; height: auto; }
-                                                        table { width: 100%; border-collapse: collapse; }
-                                                        a { color: #3b82f6; text-decoration: none; }
-                                                        a:hover { text-decoration: underline; }
-                                                        h1, h2, h3, h4, h5, h6 { margin-top: 1.5em; margin-bottom: 0.5em; }
-                                                        p { margin-bottom: 1em; }
-                                                    </style>
-                                                </head>
-                                                <body>
-                                                    ${content.html}
-                                                </body>
-                                                </html>
-                                            `}
-                                            className="w-full h-screen border-0"
-                                            sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation"
-                                            title="Contenido de la campaña"
-                                        />
-                                    </div>
+                {content ? (
+                    <div>
+                        {/* Contenido HTML */}
+                        {content.html && (
+                            <div className="mb-8">
+                                <div className="campaign-content-container">
+                                    <iframe
+                                        srcDoc={`
+                                            <!DOCTYPE html>
+                                            <html>
+                                            <head>
+                                                <meta charset="utf-8">
+                                                <meta name="viewport" content="width=device-width, initial-scale=1">
+                                                <style>
+                                                    body {
+                                                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                                        line-height: 1.6;
+                                                        color: #374151;
+                                                        margin: 0;
+                                                        padding: 20px;
+                                                        background: white;
+                                                        border: none !important;
+                                                    }
+                                                    img { max-width: 100%; height: auto; }
+                                                    table { width: 100%; border-collapse: collapse; }
+                                                    a { color: #3b82f6; text-decoration: none; }
+                                                    a:hover { text-decoration: underline; }
+                                                    h1, h2, h3, h4, h5, h6 { margin-top: 1.5em; margin-bottom: 0.5em; }
+                                                    p { margin-bottom: 1em; }
+                                                </style>
+                                            </head>
+                                            <body>
+                                                ${content.html}
+                                            </body>
+                                            </html>
+                                        `}
+                                        className="w-full h-screen"
+                                        sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation"
+                                        title="Contenido de la campaña"
+                                    />
                                 </div>
-                            )}
+                            </div>
+                        )}
 
-                            {/* Contenido de texto plano como fallback */}
-                            {!content.html && content.plain_text && (
-                                <div className="mb-8">
-                                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Contenido</h2>
-                                    <div className="whitespace-pre-wrap text-gray-700">
-                                        {content.plain_text}
-                                    </div>
+                        {/* Contenido de texto plano como fallback */}
+                        {!content.html && content.plain_text && (
+                            <div className="mb-8">
+                                <div className="whitespace-pre-wrap text-gray-700">
+                                    {content.plain_text}
                                 </div>
-                            )}
+                            </div>
+                        )}
 
-                        </div>
-                    ) : (
-                        <div className="p-6 text-center text-gray-500">
-                            No se pudo cargar el contenido de la campaña
-                        </div>
-                    )}
-                </div>
+                    </div>
+                ) : (
+                    <div className="text-center text-gray-500">
+                        No se pudo cargar el contenido de la campaña
+                    </div>
+                )}
             </div>
         </div>
     );

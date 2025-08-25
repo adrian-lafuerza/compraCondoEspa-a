@@ -1,10 +1,11 @@
 import React, { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useProperty } from '../../context/PropertyContext';
 
 export const PropertiesSection = () => {
     const navigate = useNavigate();
-    const { searchByZone, searchByLocation } = useProperty();
+    const [searchParams] = useSearchParams();
+    const { searchByZone, searchByLocation, searchByNewProperty } = useProperty();
     const sectionRef = useRef(null);
     const cardsRef = useRef([]);
 
@@ -47,23 +48,39 @@ export const PropertiesSection = () => {
     };
 
     const handleViewCostaDelSolProperties = () => {
-        searchByZone('costa-del-sol');
-        navigate('/properties?zone=costa-del-sol');
+        const currentNewProperty = searchParams.get('newProperty');
+        if (currentNewProperty) {
+            // Si estamos en una página de newProperty, combinar filtros
+            searchByNewProperty(currentNewProperty, 'costa-del-sol');
+            navigate(`/properties?newProperty=${currentNewProperty}&location=costa-del-sol`);
+        } else {
+            // Comportamiento normal
+            searchByZone('costa-del-sol');
+            navigate('/properties?zone=costa-del-sol');
+        }
     };
 
     const handleViewCostaBlancaProperties = () => {
-        searchByZone('costa-blanca');
-        navigate('/properties?zone=costa-blanca');
+        const currentNewProperty = searchParams.get('newProperty');
+        if (currentNewProperty) {
+            // Si estamos en una página de newProperty, combinar filtros
+            searchByNewProperty(currentNewProperty, 'costa-blanca');
+            navigate(`/properties?newProperty=${currentNewProperty}&location=costa-blanca`);
+        } else {
+            // Comportamiento normal
+            searchByZone('costa-blanca');
+            navigate('/properties?zone=costa-blanca');
+        }
     };
 
     const handleViewInvestmentOpportunities = () => {
-        searchByZone('inversion');
-        navigate('/properties?zone=inversion');
+        searchByNewProperty('inversion');
+        navigate('/properties?newProperty=inversion');
     };
 
     const handleViewPreconstruction = () => {
-        searchByZone('preconstruccion');
-        navigate('/properties?zone=preconstruccion');
+        searchByNewProperty('preconstruccion');
+        navigate('/properties?newProperty=preconstruccion');
     };
     return (
         <section id="properties-section" className="bg-white py-8 md:py-16 px-4 md:px-8">

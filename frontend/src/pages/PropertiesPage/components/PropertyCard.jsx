@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 const PropertyCard = ({ property, index }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const animationDelay = `${index * 0.1}s`;
 
   const handleCardClick = () => {
     navigate(`/property/${property.propertyId}`, {
@@ -13,10 +12,12 @@ const PropertyCard = ({ property, index }) => {
     });
   };
 
+  console.log(property);
+  
+
   return (
     <div
-      className="font-space-grotesk bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 animate-fadeInUp cursor-pointer h-auto sm:h-[600px] lg:h-[280px]"
-      style={{ animationDelay }}
+      className="font-space-grotesk bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer h-auto sm:h-[600px] lg:h-[280px]"
       onClick={handleCardClick}
     >
       <div className="flex flex-col lg:flex-row h-full">

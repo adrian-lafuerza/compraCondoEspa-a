@@ -5,7 +5,9 @@ const {
   getInstagramPostById,
   getInstagramStats,
   getProperties,
-  getPropertiesByZone
+  getPropertiesByZone,
+  getPropertiesByNewPropertyAndLocation,
+  getStories
 } = require('../controllers/contentfulController');
 
 /**
@@ -42,6 +44,22 @@ router.get('/properties', getProperties);
  * @access Public
  */
 router.get('/properties/zone/:zone', getPropertiesByZone);
+
+/**
+ * @route GET /api/contentful/properties/newproperty/:newProperty
+ * @route GET /api/contentful/properties/newproperty/:newProperty/location/:location
+ * @desc Obtener propiedades filtradas por newProperty (Inversión/Preconstrucción) y opcionalmente por localidad
+ * @access Public
+ */
+router.get('/properties/newproperty/:newProperty', getPropertiesByNewPropertyAndLocation);
+router.get('/properties/newproperty/:newProperty/location/:location', getPropertiesByNewPropertyAndLocation);
+
+/**
+ * @route GET /api/contentful/stories
+ * @desc Obtener stories desde Contentful con campos name, positionJob, images y videoLink
+ * @access Public
+ */
+router.get('/stories', getStories);
 
 /**
  * @route GET /api/contentful/health

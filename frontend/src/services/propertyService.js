@@ -22,7 +22,7 @@ export const propertyService = {
       // if (params.order) queryParams.append('order', params.order);
 
       // const queryString = queryParams.toString();
-      // const url = `${API_BASE_URL}/contentful/properties${queryString ? '?' + queryString : ''}`;
+      // const url = `${API_BASE_URL}/contentful/properties`;
 
       // const response = await fetch(url);
 
@@ -696,7 +696,8 @@ export const propertyService = {
           }
         ],
         "propertyType": "Apartamento",
-        "propertyZone": "Inversion",
+        "propertyZone": "Costa Blanca",
+        "newProperty": "Inversion",
         "operation": {
           "type": "Alquiler",
           "price": 1500000,
@@ -714,7 +715,7 @@ export const propertyService = {
         "title": "Datos de prueba 2",
         "reference": "ex-l2Oc",
         "descriptions": [
-          "Villas pareadas a tan solo 400 metros de las playas La Entrevista y Los Nardos – Mar de PulpíVillas pareadas a tan solo 400 metros de las playas La Entrevista y Los Nardos – Mar de PulpíVillas pareadas a tan solo 400 metros de las playas La Entrevista y Los Nardos – Mar de PulpíVillas pareadas a tan solo 400 metros de las playas La Entrevista y Los Nardos – Mar de PulpíVillas pareadas a tan solo 400 metros de las playas La Entrevista y Los Nardos – Mar de PulpíVillas pareadas a tan solo 400 metros de las playas La Entrevista y Los Nardos – Mar de Pulpí"
+          "Proyecto exclusivo en preconstrucción con las mejores calidades y ubicación privilegiada en Costa del Sol"
         ],
         "currency": "EUR",
         "address": {
@@ -754,6 +755,7 @@ export const propertyService = {
         ],
         "propertyType": "Casa",
         "propertyZone": "Costa del Sol",
+        "newProperty": "Preconstrucción",
         "operation": {
           "type": "Alquiler",
           "price": 1000034,
@@ -893,6 +895,7 @@ export const propertyService = {
       // const data = await response.json();
 
       // console.log('PropertyService: Received data from Idealista:', data);
+      // return data;
       return { success: true, data: { properties: await this.getPropertiesHardcoded() } }
     } catch (error) {
       console.error('Error fetching properties from Madrid (Idealista):', error);
@@ -921,6 +924,38 @@ export const propertyService = {
       return { success: true, data: { properties: await this.getPropertiesByContenfulHardcoded() } }
     } catch (error) {
       console.error('Error fetching properties by zone:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtener propiedades por newProperty (Inversión/Preconstrucción) y opcionalmente por localidad
+   * @param {string} newProperty - Tipo de nueva propiedad ('inversion' o 'preconstruccion')
+   * @param {string} location - Localidad específica (opcional)
+   * @returns {Promise<Object>} Respuesta de la API con propiedades filtradas
+   */
+  async getPropertiesByNewPropertyAndLocation(newProperty, location = null) {
+    try {
+      // console.log('PropertyService: Fetching properties for newProperty:', newProperty, 'location:', location);
+
+      // let url = `${API_BASE_URL}/contentful/properties/newproperty/${encodeURIComponent(newProperty)}`;
+      // if (location) {
+      //   url += `/location/${encodeURIComponent(location)}`;
+      // }
+
+      // const response = await fetch(url);
+
+      // if (!response.ok) {
+      //   throw new Error(`Error ${response.status}: ${response.statusText}`);
+      // }
+
+      // const data = await response.json();
+      // console.log('PropertyService: Received data for newProperty:', data);
+      // return data;
+
+      return { success: true, data: { properties: await this.getPropertiesByContenfulHardcoded() } }
+    } catch (error) {
+      console.error('Error fetching properties by newProperty and location:', error);
       throw error;
     }
   },

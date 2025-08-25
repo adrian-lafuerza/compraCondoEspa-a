@@ -10,7 +10,7 @@ const OportunitiesSection = () => {
     const cardRef = useRef(null)
     const textRef = useRef(null)
     const imageRef = useRef(null)
-    const marqueeRef = useRef(null)
+
 
     useEffect(() => {
         const observerOptions = {
@@ -38,73 +38,7 @@ const OportunitiesSection = () => {
         }
     }, [])
 
-    // Animación de marquee continua
-    useEffect(() => {
-        const marqueeElement = marqueeRef.current;
-        if (!marqueeElement) return;
 
-        let animationId;
-        let position;
-        let containerWidth;
-        let contentWidth;
-        const speed = 1; // píxeles por frame
-
-        const initializeAnimation = () => {
-            const container = marqueeElement.parentElement;
-            containerWidth = container.offsetWidth;
-            // Forzar recálculo del scrollWidth
-            marqueeElement.style.transform = 'translateX(0px)';
-            contentWidth = marqueeElement.scrollWidth;
-            position = containerWidth + 200;
-        };
-
-        const animate = () => {
-            position -= speed;
-
-            // Cuando el contenido desaparece completamente por la izquierda, reinicia desde la derecha
-            // Usamos un margen mucho mayor para asegurar que TODO el contenido sea visible
-            if (position <= -contentWidth - 200) {
-                position = containerWidth + 200;
-            }
-
-            marqueeElement.style.transform = `translateX(${position}px)`;
-            animationId = requestAnimationFrame(animate);
-        };
-
-        const handleResize = () => {
-            // Recalcular dimensiones cuando cambie el tamaño de la ventana
-            const container = marqueeElement.parentElement;
-            const newContainerWidth = container.offsetWidth;
-
-            // Forzar recálculo del scrollWidth después del resize
-            marqueeElement.style.transform = 'translateX(0px)';
-            setTimeout(() => {
-                const newContentWidth = marqueeElement.scrollWidth;
-
-                // Ajustar la posición proporcionalmente
-                const ratio = position / containerWidth;
-                containerWidth = newContainerWidth;
-                contentWidth = newContentWidth;
-                position = ratio * containerWidth;
-            }, 50);
-        };
-
-        // Inicializar después de que el DOM se renderice
-        setTimeout(() => {
-            initializeAnimation();
-            animate();
-        }, 100);
-
-        // Agregar listener para resize
-        window.addEventListener('resize', handleResize);
-
-        return () => {
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-            }
-            window.removeEventListener('resize', handleResize);
-        };
-    }, [])
 
     const handleScrollToProperties = () => {
         const propertiesSection = document.getElementById('properties-section');
@@ -120,17 +54,23 @@ const OportunitiesSection = () => {
         <section ref={sectionRef}>
             {/* Banner superior */}
 
-            <div ref={bannerRef} className='bg-[#0E0E0E] text-white p-3 md:p-4 mb-4 md:mb-6 shadow-2xl scroll-reveal animate-slideDown banner-marquee'>
-                <div className="banner-marquee-content" ref={marqueeRef}>
-                    <p className="font-gothic-a1 text-lg md:text-lg text-center md:text-left">
-                        Mejores oportunidades inmobiliarias en EE.UU. y España
-                    </p>
-                    <a href="#" className="hover:opacity-80 transition-opacity flex-shrink-0">
-                        <img src={StarIcon} alt="Estrella" className="w-4 h-4 md:w-5 md:h-5" />
-                    </a>
-                    <p className="font-gothic-a1 text-lg md:text-lg text-center md:text-left">
-                        Tu puerta de entrada a las mejores oportunidades inmobiliarias en EE.UU. y España
-                    </p>
+            {/* Marquee infinito - Fuera del contenedor para ocupar todo el ancho */}
+            <div
+                className="w-full bg-black py-8 my-20"
+            >
+                <div
+                    className="marquee"
+                >
+                    <div className="marquee__content font-gothic-a1 ">
+                        <span className="text-white text-xl md:text-2xl font-bold mx-4 md:mx-4 whitespace-nowrap">Tu puerta de entrada a las mejores oportunidades inmobiliarias en EE.UU. y España</span>
+                        <span className="text-white text-xl md:text-2xl font-bold mx-4 md:mx-4 whitespace-nowrap">★</span>
+                        <span className="text-white text-xl md:text-2xl font-bold mx-4 md:mx-4 whitespace-nowrap">Tu puerta de entrada a las mejores oportunidades inmobiliarias en EE.UU. y España</span>
+                        <span className="text-white text-xl md:text-2xl font-bold mx-4 md:mx-4 whitespace-nowrap">★</span>
+                        <span className="text-white text-xl md:text-2xl font-bold mx-4 md:mx-4 whitespace-nowrap">Tu puerta de entrada a las mejores oportunidades inmobiliarias en EE.UU. y España</span>
+                        <span className="text-white text-xl md:text-2xl font-bold mx-4 md:mx-4 whitespace-nowrap">★</span>
+                        <span className="text-white text-xl md:text-2xl font-bold mx-4 md:mx-4 whitespace-nowrap">Tu puerta de entrada a las mejores oportunidades inmobiliarias en EE.UU. y España</span>
+                        <span className="text-white text-xl md:text-2xl font-bold mx-4 md:mx-4 whitespace-nowrap">★</span>
+                    </div>
                 </div>
             </div>
 
@@ -203,9 +143,9 @@ const OportunitiesSection = () => {
                                             {/* Botón de YouTube posicionado mitad dentro y mitad fuera */}
                                             <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2">
                                                 <div className="cursor-pointer hover:scale-110 transition-all duration-300">
-                                                    <img 
-                                                        src={YoutubeButton} 
-                                                        alt="Play video" 
+                                                    <img
+                                                        src={YoutubeButton}
+                                                        alt="Play video"
                                                         className="w-28 h-28"
                                                     />
                                                 </div>

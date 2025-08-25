@@ -35,7 +35,7 @@ const FilterSidebar = ({ localFilters, handleFilterChange, handleClearFilters })
     return '';
   };
 
-  console.log('getCurrentLocationValue()', getCurrentLocationValue());
+  console.log('searchParams', searchParams.get('newProperty'));
 
 
   return (
@@ -52,16 +52,20 @@ const FilterSidebar = ({ localFilters, handleFilterChange, handleClearFilters })
 
             if (selectedLocation) {
               // Limpiar filtros locales antes de navegar
-              handleClearFilters();
+              // handleClearFilters();
 
               // Solo navegar - el useEffect de PropertiesPage se encargará de la llamada API
-              if (selectedLocation === 'madrid') {
+
+              if (searchParams.get('newProperty') !== null) {
+                navigate(`/properties?newProperty=${searchParams.get('newProperty')}&location=${selectedLocation}`);
+              } else if (selectedLocation === 'madrid') {
                 navigate('/properties?location=madrid');
               } else if (selectedLocation === 'costa-blanca') {
                 navigate('/properties?zone=costa-blanca');
               } else if (selectedLocation === 'costa-del-sol') {
                 navigate('/properties?zone=costa-del-sol');
               }
+
             } else {
               // Si no hay selección, actualizar el filtro normalmente
               handleFilterChange('location', selectedLocation);
@@ -79,7 +83,7 @@ const FilterSidebar = ({ localFilters, handleFilterChange, handleClearFilters })
       {/* Precio */}
       <div className="mb-4 lg:mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">Precio</label>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-row gap-2">
           <input
             type="number"
             placeholder="Min €"
@@ -102,7 +106,7 @@ const FilterSidebar = ({ localFilters, handleFilterChange, handleClearFilters })
       {/* Superficie */}
       <div className="mb-4 lg:mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">Superficie (m²)</label>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-row gap-2">
           <input
             type="number"
             placeholder="Min m²"
