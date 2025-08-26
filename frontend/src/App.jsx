@@ -1,5 +1,5 @@
 import './App.css'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { Navbar } from './components/Navbar/Navbar'
 import { HeroSection } from './components/HeroSection/HeroSection'
 import { PropertiesSection } from './components/PropertiesSection/PropertiesSection'
@@ -27,30 +27,49 @@ const HomePage = () => (
   </>
 )
 
+// Componente para las rutas de la aplicación
+const AppRoutes = () => (
+  <InstagramProvider>
+    <PropertyProvider>
+      <CampaignCacheProvider>
+        <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1">
+          <PageTransition>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/properties" element={<PropertiesPage />} />
+              <Route path="/property/:id" element={<PropertyDetailPage />} />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/campaign/:campaignId" element={<CampaignDetailPage />} />
+            </Routes>
+          </PageTransition>
+        </main>
+        <Footer />
+        </div>
+      </CampaignCacheProvider>
+    </PropertyProvider>
+  </InstagramProvider>
+)
+
 function App() {
+  // Detectar si estamos en la ruta base del proyecto
+  const isProjectRoute = window.location.pathname.startsWith('/project')
+  
+  if (isProjectRoute) {
+    return (
+      <Router basename="/project">
+        <AppRoutes />
+      </Router>
+    )
+  }
+  
+  // Si no estamos en /project, redirigir
   return (
-    <Router basename="/project">
-      <InstagramProvider>
-        <PropertyProvider>
-          <CampaignCacheProvider>
-            <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-1">
-              <PageTransition>
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/properties" element={<PropertiesPage />} />
-                  <Route path="/property/:id" element={<PropertyDetailPage />} />
-                  <Route path="/blog" element={<BlogPage />} />
-                  <Route path="/campaign/:campaignId" element={<CampaignDetailPage />} />
-                </Routes>
-              </PageTransition>
-            </main>
-            <Footer />
-            </div>
-          </CampaignCacheProvider>
-        </PropertyProvider>
-      </InstagramProvider>
+    <Router>
+      <Routes>
+        <Route path="*" element={<Navigate to="/project/" replace />} />
+      </Routes>
     </Router>
   )
 }
