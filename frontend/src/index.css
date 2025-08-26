@@ -3,7 +3,7 @@
 /* Roboto Font Faces */
 @font-face {
   font-family: 'Roboto';
-  src: url('assets/fonts/Roboto-Light.woff2') format('woff2');
+  src: url('/assets/fonts/Roboto-Light.woff2') format('woff2');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -11,7 +11,7 @@
 
 @font-face {
   font-family: 'Roboto';
-  src: url('assets/fonts/Roboto-Regular.woff2') format('woff2');
+  src: url('/assets/fonts/Roboto-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -19,7 +19,7 @@
 
 @font-face {
   font-family: 'Roboto';
-  src: url('assets/fonts/Roboto-Medium.woff2') format('woff2');
+  src: url('/assets/fonts/Roboto-Medium.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -27,7 +27,7 @@
 
 @font-face {
   font-family: 'Roboto';
-  src: url('assets/fonts/Roboto-Bold.woff2') format('woff2');
+  src: url('/assets/fonts/Roboto-Bold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -36,7 +36,7 @@
 /* Gothic A1 Font Faces */
 @font-face {
   font-family: 'Gothic A1';
-  src: url('assets/fonts/GothicA1-Light.woff2') format('woff2');
+  src: url('/assets/fonts/GothicA1-Light.woff2') format('woff2');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -44,7 +44,7 @@
 
 @font-face {
   font-family: 'Gothic A1';
-  src: url('assets/fonts/GothicA1-Regular.woff2') format('woff2');
+  src: url('/assets/fonts/GothicA1-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -52,7 +52,7 @@
 
 @font-face {
   font-family: 'Gothic A1';
-  src: url('assets/fonts/GothicA1-Medium.woff2') format('woff2');
+  src: url('/assets/fonts/GothicA1-Medium.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -60,7 +60,7 @@
 
 @font-face {
   font-family: 'Gothic A1';
-  src: url('assets/fonts/GothicA1-SemiBold.woff2') format('woff2');
+  src: url('/assets/fonts/GothicA1-SemiBold.woff2') format('woff2');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -68,7 +68,7 @@
 
 @font-face {
   font-family: 'Gothic A1';
-  src: url('assets/fonts/GothicA1-Bold.woff2') format('woff2');
+  src: url('/assets/fonts/GothicA1-Bold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -77,7 +77,7 @@
 /* Poppins Font Faces */
 @font-face {
   font-family: 'Poppins';
-  src: url('assets/fonts/Poppins-Regular.woff2') format('woff2');
+  src: url('/assets/fonts/Poppins-Regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -85,7 +85,7 @@
 
 @font-face {
   font-family: 'Poppins';
-  src: url('assets/fonts/Poppins-Medium.woff2') format('woff2');
+  src: url('/assets/fonts/Poppins-Medium.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -93,7 +93,7 @@
 
 @font-face {
   font-family: 'Poppins';
-  src: url('assets/fonts/Poppins-SemiBold.woff2') format('woff2');
+  src: url('/assets/fonts/Poppins-SemiBold.woff2') format('woff2');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -101,7 +101,7 @@
 
 @font-face {
   font-family: 'Poppins';
-  src: url('assets/fonts/Poppins-Bold.woff2') format('woff2');
+  src: url('/assets/fonts/Poppins-Bold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -110,7 +110,7 @@
 /* Work Sans Font Faces */
 @font-face {
   font-family: 'Work Sans';
-  src: url('assets/fonts/work-sans/work-sans-v23-latin-300.woff2') format('woff2');
+  src: url('/assets/fonts/work-sans/work-sans-v23-latin-300.woff2') format('woff2');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
@@ -118,7 +118,7 @@
 
 @font-face {
   font-family: 'Work Sans';
-  src: url('assets/fonts/work-sans/work-sans-v23-latin-regular.woff2') format('woff2');
+  src: url('/assets/fonts/work-sans/work-sans-v23-latin-regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -126,7 +126,7 @@
 
 @font-face {
   font-family: 'Work Sans';
-  src: url('assets/fonts/work-sans/work-sans-v23-latin-500.woff2') format('woff2');
+  src: url('/assets/fonts/work-sans/work-sans-v23-latin-500.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
@@ -134,7 +134,7 @@
 
 @font-face {
   font-family: 'Work Sans';
-  src: url('assets/fonts/work-sans/work-sans-v23-latin-600.woff2') format('woff2');
+  src: url('/assets/fonts/work-sans/work-sans-v23-latin-600.woff2') format('woff2');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -142,7 +142,7 @@
 
 @font-face {
   font-family: 'Work Sans';
-  src: url('assets/fonts/work-sans/work-sans-v23-latin-700.woff2') format('woff2');
+  src: url('/assets/fonts/work-sans/work-sans-v23-latin-700.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
