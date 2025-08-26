@@ -3,7 +3,7 @@ const PropertiesHeroSection = ({ title }) => {
     <div className="relative h-[50vh] sm:h-[60vh] lg:h-[60vh] overflow-hidden">
       {/* Background Image */}
       <img 
-        src="/images/HeroProperties.png" 
+        src={`${import.meta.env.BASE_URL}images/HeroProperties.png`} 
         alt="Luxury properties in Spain"
         className="absolute inset-0 w-full h-full object-cover"
       />

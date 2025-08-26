@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
 
 export const propertyService = {
   /**
@@ -13,33 +13,35 @@ export const propertyService = {
    */
   async getProperties(params = {}) {
     try {
-      // Construir parámetros de consulta para Contentful
-      // const queryParams = new URLSearchParams();
+        // Construir parámetros de consulta para Contentful
+        const queryParams = new URLSearchParams();
 
-      // // Agregar parámetros opcionales
-      // if (params.limit) queryParams.append('limit', params.limit);
-      // if (params.skip) queryParams.append('skip', params.skip);
-      // if (params.order) queryParams.append('order', params.order);
+        // Agregar parámetros opcionales
+        if (params.limit) queryParams.append('limit', params.limit);
+        if (params.skip) queryParams.append('skip', params.skip);
+        if (params.order) queryParams.append('order', params.order);
 
-      // const queryString = queryParams.toString();
-      // const url = `${API_BASE_URL}/contentful/properties`;
+        const queryString = queryParams.toString();
+        const url = `${API_BASE_URL}/contentful/properties`;
 
-      // const response = await fetch(url);
+        const response = await fetch(url);
 
-      // if (!response.ok) {
-      //   throw new Error(`Error ${response.status}: ${response.statusText}`);
-      // }
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
 
-      // const data = await response.json();
+        const data = await response.json();
 
-      // if (data.success && data.data && data.data.properties) {
-      //   return data.data.properties;
-      // } else {
-      //   throw new Error(data.message || 'Error al obtener propiedades');
-      // }
-
-
-      return await this.getPropertiesHardcoded()
+        if (data.success && data.data && data.data.properties) {
+          return {
+            success: true,
+            data: {
+              properties: data.data.properties
+            }
+          };
+        } else {
+          throw new Error(data.message || 'Error al obtener propiedades');
+        }
     } catch (error) {
       console.error('Error fetching properties:', error);
       throw error;
@@ -873,30 +875,37 @@ export const propertyService = {
    */
   async getPropertiesByMadrid(params = {}) {
     try {
-      // console.log('PropertyService: Fetching properties for Madrid from Idealista');
 
-      // // Construir parámetros de consulta para Idealista
-      // const queryParams = new URLSearchParams();
+      // Construir parámetros de consulta para Idealista
+      const queryParams = new URLSearchParams();
 
-      // // Agregar parámetros opcionales
-      // if (params.page) queryParams.append('page', params.page);
-      // if (params.size) queryParams.append('size', params.size);
-      // if (params.state) queryParams.append('state', params.state);
+      // Agregar parámetros opcionales
+      if (params.page) queryParams.append('page', params.page);
+      if (params.size) queryParams.append('size', params.size);
+      if (params.state) queryParams.append('state', params.state);
 
-      // const queryString = queryParams.toString();
-      // const url = `${API_BASE_URL}/idealista/properties${queryString ? '?' + queryString : ''}`;
+      const queryString = queryParams.toString();
+      const url = `${API_BASE_URL}/idealista/properties${queryString ? '?' + queryString : ''}`;
 
-      // const response = await fetch(url);
+      const response = await fetch(url);
 
-      // if (!response.ok) {
-      //   throw new Error(`Error ${response.status}: ${response.statusText}`);
-      // }
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
 
-      // const data = await response.json();
+      const data = await response.json();
 
-      // console.log('PropertyService: Received data from Idealista:', data);
-      // return data;
-      return { success: true, data: { properties: await this.getPropertiesHardcoded() } }
+      // Asegurar que devolvemos el formato esperado
+      if (data && data.success) {
+        return data;
+      } else {
+        return {
+          success: true,
+          data: {
+            properties: data.properties || data || []
+          }
+        };
+      }
     } catch (error) {
       console.error('Error fetching properties from Madrid (Idealista):', error);
       throw error;
@@ -910,18 +919,27 @@ export const propertyService = {
    */
   async getPropertiesByZone(zone) {
     try {
-      // console.log('PropertyService: Fetching properties for zone:', zone);
-      // const response = await fetch(`${API_BASE_URL}/contentful/properties/zone/${encodeURIComponent(zone)}`);
+      const response = await fetch(`${API_BASE_URL}/contentful/properties/zone/${encodeURIComponent(zone)}`);
 
-      // if (!response.ok) {
-      //   throw new Error(`Error ${response.status}: ${response.statusText}`);
-      // }
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
 
-      // const data = await response.json();
-      // console.log('PropertyService: Received data:', data);
-      // return data;
+      const data = await response.json();
+      console.log('PropertyService: Received data:', data);
+      
+      // Asegurar que devolvemos el formato esperado
+      if (data && data.success) {
+        return data;
+      } else {
+        return {
+          success: true,
+          data: {
+            properties: data.properties || data || []
+          }
+        };
+      }
 
-      return { success: true, data: { properties: await this.getPropertiesByContenfulHardcoded() } }
     } catch (error) {
       console.error('Error fetching properties by zone:', error);
       throw error;
@@ -929,31 +947,54 @@ export const propertyService = {
   },
 
   /**
-   * Obtener propiedades por newProperty (Inversión/Preconstrucción) y opcionalmente por localidad
+   * Obtener propiedades por newProperty (Inversión/Preconstrucción)
    * @param {string} newProperty - Tipo de nueva propiedad ('inversion' o 'preconstruccion')
-   * @param {string} location - Localidad específica (opcional)
    * @returns {Promise<Object>} Respuesta de la API con propiedades filtradas
    */
-  async getPropertiesByNewPropertyAndLocation(newProperty, location = null) {
+  async getPropertiesByNewProperty(newProperty) {
     try {
-      // console.log('PropertyService: Fetching properties for newProperty:', newProperty, 'location:', location);
+      console.log('PropertyService: Fetching properties for newProperty:', newProperty);
 
-      // let url = `${API_BASE_URL}/contentful/properties/newproperty/${encodeURIComponent(newProperty)}`;
-      // if (location) {
-      //   url += `/location/${encodeURIComponent(location)}`;
-      // }
+      const url = `${API_BASE_URL}/contentful/properties/newproperty/${encodeURIComponent(newProperty)}`;
 
-      // const response = await fetch(url);
+      const response = await fetch(url);
 
-      // if (!response.ok) {
-      //   throw new Error(`Error ${response.status}: ${response.statusText}`);
-      // }
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
 
-      // const data = await response.json();
-      // console.log('PropertyService: Received data for newProperty:', data);
-      // return data;
+      const data = await response.json();
+      console.log('PropertyService: Received data for newProperty:', data);
+      return data;
 
-      return { success: true, data: { properties: await this.getPropertiesByContenfulHardcoded() } }
+    } catch (error) {
+      console.error('Error fetching properties by newProperty:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtener propiedades por newProperty y location combinados
+   * @param {string} newProperty - Tipo de nueva propiedad ('inversion' o 'preconstruccion')
+   * @param {string} location - Localidad específica (ej: 'costa-del-sol', 'costa-blanca')
+   * @returns {Promise<Object>} Respuesta de la API con propiedades filtradas
+   */
+  async getPropertiesByNewPropertyAndLocation(newProperty, location) {
+    try {
+      console.log('PropertyService: Fetching properties for newProperty:', newProperty, 'and location:', location);
+
+      const url = `${API_BASE_URL}/contentful/properties/newproperty/${encodeURIComponent(newProperty)}/location/${encodeURIComponent(location)}`;
+
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('PropertyService: Received data for newProperty and location:', data);
+      return data;
+
     } catch (error) {
       console.error('Error fetching properties by newProperty and location:', error);
       throw error;

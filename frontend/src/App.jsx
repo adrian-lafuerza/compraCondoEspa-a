@@ -29,7 +29,7 @@ const HomePage = () => (
 
 function App() {
   return (
-    <Router>
+    <Router basename="/project">
       <InstagramProvider>
         <PropertyProvider>
           <CampaignCacheProvider>

@@ -34,7 +34,7 @@ export const HeroSection = () => {
         <section className="relative h-screen overflow-hidden">
             {/* Background Image */}
             <img 
-                src="/images/Hero.png" 
+                src={`${import.meta.env.BASE_URL}images/Hero.png`} 
                 alt="Luxury apartment building with balconies"
                 className="absolute inset-0 w-full h-full object-cover"
             />

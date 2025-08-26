@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { propertyService } from '../services/propertyService';
 
 const PropertyContext = createContext();
@@ -17,6 +17,7 @@ export const PropertyProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [currentProperty, setCurrentProperty] = useState(null);
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
+  const activeRequestRef = useRef(null);
   const [attemptedPropertyIds, setAttemptedPropertyIds] = useState(new Set());
   const [filters, setFilters] = useState({
     location: '',
@@ -31,42 +32,41 @@ export const PropertyProvider = ({ children }) => {
   });
 
   /**
-   * Cargar propiedades desde la API
-   * @param {Object} searchFilters - Filtros de búsqueda
+   * Cargar propiedades con filtros opcionales
+   * @param {Object} filters - Filtros de búsqueda
    */
-  const loadProperties = useCallback(async (searchFilters = {}) => {
+  const loadProperties = useCallback(async (filters = {}) => {
+    const requestKey = `loadProperties_${JSON.stringify(filters)}`;
+    
+    // Prevenir llamadas duplicadas
+    if (activeRequestRef.current === requestKey || loading) {
+      return;
+    }
+    
     try {
+      activeRequestRef.current = requestKey;
       setLoading(true);
       setError(null);
       setHasAttemptedLoad(true);
 
-      // Combinar filtros actuales con los nuevos
-      const finalFilters = { ...filters, ...searchFilters };
+      const response = await propertyService.getProperties(filters);
 
-      // Obtener propiedades desde la API
-      const response = await propertyService.getProperties(finalFilters);
-
-      console.log(response);
-
-
-      if (response && response) {
-        // Transformar propiedades si es necesario
-        setProperties(response);
-        setError(null); // Limpiar errores previos en caso de éxito
+      // La respuesta viene como { success: true, data: { properties: [...] } }
+      if (response && response.success && response.data && response.data.properties && Array.isArray(response.data.properties)) {
+        setProperties(response.data.properties);
+        setError(null);
       } else {
-        throw new Error(response.message || 'Error al cargar propiedades');
+        throw new Error(response.message || 'Formato de respuesta inválido del servidor');
       }
     } catch (err) {
       console.error('Error loading properties:', err);
-      const errorMessage = err.message.includes('Error 500')
-        ? 'Error del servidor: No se pudieron cargar las propiedades. Por favor, inténtalo más tarde.'
-        : err.message;
-      setError(errorMessage);
-      setProperties([]); // Limpiar propiedades en caso de error
+      setError(err.message);
+      setProperties([]);
     } finally {
       setLoading(false);
+      activeRequestRef.current = null;
     }
-  }, [filters]);
+  }, []);
 
   /**
    * Cargar una propiedad específica por ID
@@ -177,35 +177,52 @@ export const PropertyProvider = ({ children }) => {
    * @param {string} location - Ubicación a buscar
    */
   const searchByLocation = useCallback(async (location) => {
+    const requestKey = `searchByLocation_${location}`;
+    
+    // Prevenir llamadas duplicadas
+    if (activeRequestRef.current === requestKey || loading) {
+      return;
+    }
+    
     try {
-      console.log('PropertyContext: searchByLocation called with:', location);
+      activeRequestRef.current = requestKey;
       setLoading(true);
       setError(null);
       setHasAttemptedLoad(true);
-      
-      // No limpiar propiedades anteriores hasta que lleguen las nuevas
-      // setProperties([]);
 
       // Si la ubicación es Madrid, usar Idealista
       if (location && location.toLowerCase() === 'madrid') {
-        console.log('PropertyContext: Searching Madrid properties using Idealista');
         const response = await propertyService.getPropertiesByMadrid();
-        console.log('PropertyContext: Madrid API response:', response);
         
-        if (response && response.success && response.data && response.data.properties) {
-          console.log('PropertyContext: Setting Madrid properties:', response.data.properties.length);
-          setProperties(response.data.properties);
-          setError(null);
+        if (response && response.success && response.data) {
+          // Verificar si response.data tiene properties directamente o si es un array
+          const properties = response.data.properties || (Array.isArray(response.data) ? response.data : []);
+          
+          if (properties && properties.length >= 0) {
+            setProperties(properties);
+            setError(null);
+          } else {
+            setProperties([]);
+            setError(null);
+          }
         } else {
-          console.error('PropertyContext: Invalid Madrid response:', response);
-          throw new Error(response.message || 'Error al cargar propiedades de Madrid');
+          throw new Error(response?.message || 'Error al cargar propiedades de Madrid');
         }
       } else {
         // Para otras ubicaciones, usar el método tradicional con filtros
-        console.log('PropertyContext: Searching other location with filters');
         const searchFilters = { ...filters, location };
         setFilters(searchFilters);
-        await loadProperties(searchFilters);
+        
+        // Llamar directamente al servicio en lugar de loadProperties para evitar recursión
+        const response = await propertyService.getProperties(searchFilters);
+        
+        // La respuesta viene como { success: true, data: { properties: [...] } }
+        if (response && response.success && response.data && response.data.properties && Array.isArray(response.data.properties)) {
+          setProperties(response.data.properties);
+          setError(null);
+        } else {
+          throw new Error(response.message || 'Formato de respuesta inválido del servidor');
+        }
       }
     } catch (err) {
       console.error('Error searching properties by location:', err);
@@ -213,15 +230,24 @@ export const PropertyProvider = ({ children }) => {
       setProperties([]);
     } finally {
       setLoading(false);
+      activeRequestRef.current = null;
     }
-  }, [filters, loadProperties]);
+  }, []);
 
   /**
-   * Buscar propiedades por zona desde Contentful
+   * Buscar propiedades por zona
    * @param {string} zone - Zona específica (ej: 'costa-del-sol', 'costa-blanca', 'barcelona')
    */
   const searchByZone = useCallback(async (zone) => {
+    const requestKey = `searchByZone_${zone}`;
+    
+    // Prevenir llamadas duplicadas
+    if (activeRequestRef.current === requestKey || loading) {
+      return;
+    }
+    
     try {
+      activeRequestRef.current = requestKey;
       setLoading(true);
       setError(null);
       setHasAttemptedLoad(true);
@@ -241,23 +267,38 @@ export const PropertyProvider = ({ children }) => {
       setProperties([]);
     } finally {
       setLoading(false);
+      activeRequestRef.current = null;
     }
   }, []);
 
   /**
-   * Buscar propiedades por newProperty (Inversión/Preconstrucción) y opcionalmente por localidad
+   * Buscar propiedades por newProperty (Inversión/Preconstrucción)
    * @param {string} newProperty - Tipo de nueva propiedad ('inversion' o 'preconstruccion')
    * @param {string} location - Localidad específica (opcional)
    */
   const searchByNewProperty = useCallback(async (newProperty, location = null) => {
+    const requestKey = `searchByNewProperty_${newProperty}_${location || 'all'}`;
+    
+    // Prevenir llamadas duplicadas
+    if (activeRequestRef.current === requestKey || loading) {
+      return;
+    }
+    
     try {
+      activeRequestRef.current = requestKey;
       setLoading(true);
       setError(null);
       setHasAttemptedLoad(true);
 
-      console.log('PropertyContext: Searching by newProperty:', newProperty, 'and location:', location);
-      const response = await propertyService.getPropertiesByNewPropertyAndLocation(newProperty, location);
-      console.log('PropertyContext: Properties found:', response);
+      let response;
+      
+      if (location) {
+        // Si se especifica una localidad, usar el endpoint combinado específico
+        response = await propertyService.getPropertiesByNewPropertyAndLocation(newProperty, location);
+      } else {
+        // Si no se especifica localidad, usar el endpoint específico
+        response = await propertyService.getPropertiesByNewProperty(newProperty);
+      }
 
       // La respuesta viene como { success: true, data: { properties: [...] } }
       if (response && response.success && response.data && response.data.properties && Array.isArray(response.data.properties)) {
@@ -267,11 +308,12 @@ export const PropertyProvider = ({ children }) => {
         throw new Error(response.message || 'Formato de respuesta inválido del servidor');
       }
     } catch (err) {
-      console.error('PropertyContext: Error searching by newProperty:', err);
+      console.error('Error searching properties by newProperty:', err);
       setError(err.message);
       setProperties([]);
     } finally {
       setLoading(false);
+      activeRequestRef.current = null;
     }
   }, []);
 

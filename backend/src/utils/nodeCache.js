@@ -16,6 +16,12 @@ class MemoryCache {
             useClones: false
         });
         
+        this.mailchimpCache = new NodeCache({ 
+            stdTTL: 1800, // 30 minutos
+            checkperiod: 600,
+            useClones: false
+        });
+        
         this.isConnected = true; // Siempre disponible
         console.log('✅ Caché en memoria inicializado correctamente');
         
@@ -35,6 +41,10 @@ class MemoryCache {
         this.imagesCache.on('expired', (key, value) => {
             console.log(`⏰ Caché de imágenes expirado: ${key}`);
         });
+        
+        this.mailchimpCache.on('expired', (key, value) => {
+            console.log(`⏰ Caché de Mailchimp expirado: ${key}`);
+        });
     }
 
     // Obtener datos del caché
@@ -52,6 +62,12 @@ class MemoryCache {
                     // Imágenes obtenidas del caché
                 }
                 return data;
+            } else if (key.startsWith('mailchimp:')) {
+                const data = this.mailchimpCache.get(key);
+                if (data) {
+                    console.log(`📦 Datos de Mailchimp obtenidos del caché: ${key}`);
+                }
+                return data;
             }
             return null;
         } catch (error) {
@@ -67,6 +83,9 @@ class MemoryCache {
                 this.propertiesCache.set(key, data, ttlSeconds || 1800);
             } else if (key.startsWith('images:')) {
                 this.imagesCache.set(key, data, ttlSeconds || 3600);
+            } else if (key.startsWith('mailchimp:')) {
+                this.mailchimpCache.set(key, data, ttlSeconds || 1800);
+                console.log(`💾 Datos de Mailchimp guardados en caché: ${key}`);
             }
             return true;
         } catch (error) {
@@ -82,6 +101,8 @@ class MemoryCache {
                 return this.propertiesCache.del(key) > 0;
             } else if (key.startsWith('images:')) {
                 return this.imagesCache.del(key) > 0;
+            } else if (key.startsWith('mailchimp:')) {
+                return this.mailchimpCache.del(key) > 0;
             }
             return false;
         } catch (error) {
@@ -95,6 +116,7 @@ class MemoryCache {
         try {
             this.propertiesCache.flushAll();
             this.imagesCache.flushAll();
+            this.mailchimpCache.flushAll();
             console.log('🧹 Caché completamente limpiado');
             return true;
         } catch (error) {
@@ -110,6 +132,8 @@ class MemoryCache {
                 return this.propertiesCache.has(key);
             } else if (key.startsWith('images:')) {
                 return this.imagesCache.has(key);
+            } else if (key.startsWith('mailchimp:')) {
+                return this.mailchimpCache.has(key);
             }
             return false;
         } catch (error) {
@@ -124,6 +148,8 @@ class MemoryCache {
                 return this.propertiesCache.getTtl(key);
             } else if (key.startsWith('images:')) {
                 return this.imagesCache.getTtl(key);
+            } else if (key.startsWith('mailchimp:')) {
+                return this.mailchimpCache.getTtl(key);
             }
             return -1;
         } catch (error) {
@@ -135,6 +161,7 @@ class MemoryCache {
     async close() {
         this.propertiesCache.close();
         this.imagesCache.close();
+        this.mailchimpCache.close();
         console.log('🔌 Caché cerrado');
     }
 
@@ -143,6 +170,7 @@ class MemoryCache {
         try {
             const propertiesStats = this.propertiesCache.getStats();
             const imagesStats = this.imagesCache.getStats();
+            const mailchimpStats = this.mailchimpCache.getStats();
             
             return {
                 connected: this.isConnected,
@@ -160,9 +188,16 @@ class MemoryCache {
                     ksize: imagesStats.ksize,
                     vsize: imagesStats.vsize
                 },
-                total_keys: propertiesStats.keys + imagesStats.keys,
-                total_hits: propertiesStats.hits + imagesStats.hits,
-                total_misses: propertiesStats.misses + imagesStats.misses
+                mailchimp: {
+                    keys: mailchimpStats.keys,
+                    hits: mailchimpStats.hits,
+                    misses: mailchimpStats.misses,
+                    ksize: mailchimpStats.ksize,
+                    vsize: mailchimpStats.vsize
+                },
+                total_keys: propertiesStats.keys + imagesStats.keys + mailchimpStats.keys,
+                total_hits: propertiesStats.hits + imagesStats.hits + mailchimpStats.hits,
+                total_misses: propertiesStats.misses + imagesStats.misses + mailchimpStats.misses
             };
         } catch (error) {
             return {
@@ -192,6 +227,18 @@ class MemoryCache {
             return true;
         } catch (error) {
             console.log('❌ Error al limpiar caché de imágenes:', error.message);
+            return false;
+        }
+    }
+
+    // Limpiar solo caché de Mailchimp
+    async clearMailchimp() {
+        try {
+            this.mailchimpCache.flushAll();
+            console.log('🧹 Caché de Mailchimp limpiado');
+            return true;
+        } catch (error) {
+            console.log('❌ Error al limpiar caché de Mailchimp:', error.message);
             return false;
         }
     }

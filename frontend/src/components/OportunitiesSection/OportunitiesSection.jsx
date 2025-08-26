@@ -134,7 +134,7 @@ const OportunitiesSection = () => {
                                             {/* Imagen container con altura completa */}
                                             <div className="flex-1 relative bg-gray-800 overflow-hidden">
                                                 <img
-                                                    src="/images/RUBEN FOTO 1.png"
+                                                    src={`${import.meta.env.BASE_URL}images/RUBEN FOTO 1.png`}
                                                     alt="Ruben Alvarez"
                                                     className="w-full h-full object-cover"
                                                 />

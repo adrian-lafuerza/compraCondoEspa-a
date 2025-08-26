@@ -1,7 +1,7 @@
 // Controlador de Idealista con integración a la API real
 const axios = require('axios');
-const { getIdealistaToken } = require('../../utils/idealistaAuth.middleware');
-const { redisCache, CacheKeys, CacheTTL } = require('../../utils/nodeCache');
+const { getIdealistaToken } = require('../utils/idealistaAuth.middleware');
+const { redisCache, CacheKeys, CacheTTL } = require('../utils/nodeCache');
 
 // Map para almacenar promesas pendientes y evitar llamadas duplicadas
 const pendingRequests = new Map();

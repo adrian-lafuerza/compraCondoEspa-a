@@ -105,7 +105,7 @@ export const PropertiesSection = () => {
                     >
                         <div className="relative">
                             <img
-                                src="/images/sales.png"
+                                src={`${import.meta.env.BASE_URL}images/sales.png`}
                                 alt="Madrid - Lujo urbano y conexiones globales"
                                 className="w-full object-cover image-hover-smooth"
                             />
@@ -128,7 +128,7 @@ export const PropertiesSection = () => {
                     >
                         <div className="relative">
                             <img
-                                src="/images/rent.png"
+                                src={`${import.meta.env.BASE_URL}images/rent.png`}
                                 alt="Costa del Sol - Vida premium frente al mar"
                                 className="w-full object-cover image-hover-smooth"
                             />
@@ -151,7 +151,7 @@ export const PropertiesSection = () => {
                     >
                         <div className="relative">
                             <img
-                                src="/images/rent.png"
+                                src={`${import.meta.env.BASE_URL}images/rent.png`}
                                 alt="Florida - Inversión y estilo de vida"
                                 className="w-full object-cover image-hover-smooth"
                             />
@@ -174,7 +174,7 @@ export const PropertiesSection = () => {
                     >
                         <div className="relative">
                             <img
-                                src="/images/sales.png"
+                                src={`${import.meta.env.BASE_URL}images/sales.png`}
                                 alt="Oportunidades de Inversión - Rentabilidad garantizada"
                                 className="w-full object-cover image-hover-smooth"
                             />
@@ -197,7 +197,7 @@ export const PropertiesSection = () => {
                     >
                         <div className="relative">
                             <img
-                                src="/images/rent.png"
+                                src={`${import.meta.env.BASE_URL}images/rent.png`}
                                 alt="Preconstrucción - Proyectos exclusivos"
                                 className="w-full object-cover image-hover-smooth"
                             />

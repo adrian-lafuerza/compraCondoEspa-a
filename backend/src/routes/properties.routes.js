@@ -1,5 +1,5 @@
 const express = require('express');
-const { getProperties, getPropertyImagesController } = require('../controllers/idealistaPartners/idealista.controller');
+const { getProperties, getPropertyImagesController } = require('../controllers/idealista.controller');
 const { idealistaAuth } = require('../utils/idealistaAuth.middleware');
 const { redisCache } = require('../utils/nodeCache');
 

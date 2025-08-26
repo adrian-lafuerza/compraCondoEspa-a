@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3000/api/contentful';
+const API_BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/contentful`;
 
 // Crear instancia de axios con configuración base
 const api = axios.create({
@@ -34,63 +34,13 @@ export const instagramService = {
   // Obtener todos los posts de Instagram
   async getAllPosts() {
     try {
-      // const response = await api.get('/instagram');
+      const response = await api.get('/instagram');
 
-      // console.log('Instagram API Response:', response.data);
+      console.log('Instagram API Response:', response.data);
 
-      // // El backend devuelve { success: true, data: [...], total: number, message: string }
-      // return response.data.data || [];
+      // El backend devuelve { success: true, data: [...], total: number, message: string }
+      return response.data.data || [];
 
-      return [{
-        "id": "1TZfwZnqoGK9TyMkLZ09JV",
-        "title": "Reel 3",
-        "instagramUrl": "https://www.instagram.com/p/DNYbJuANH6-/",
-        "embedUrl": "https://www.instagram.com/p/DNYbJuANH6-/embed",
-        "likes": 0,
-        "comments": 0,
-        "createdAt": "2025-08-21T21:47:39.258Z",
-        "updatedAt": "2025-08-21T21:47:39.258Z"
-      },
-      {
-        "id": "70E8ASU3LpfqBrWXNUtr1y",
-        "title": "Reel 2",
-        "instagramUrl": "https://www.instagram.com/p/DNa9_ddOvY8/",
-        "embedUrl": "https://www.instagram.com/p/DNa9_ddOvY8/embed",
-        "likes": 0,
-        "comments": 0,
-        "createdAt": "2025-08-21T21:47:17.733Z",
-        "updatedAt": "2025-08-21T21:47:17.733Z"
-      },
-      {
-        "id": "6MkW2yuFyk7BlKlCxL3sTn",
-        "title": "Reel 1",
-        "instagramUrl": "https://www.instagram.com/p/DNjX8A-xiEW/",
-        "embedUrl": "https://www.instagram.com/p/DNjX8A-xiEW/embed",
-        "likes": 0,
-        "comments": 0,
-        "createdAt": "2025-08-21T21:46:48.261Z",
-        "updatedAt": "2025-08-21T21:46:48.261Z"
-      },
-      {
-        "id": "7NlX3zvGzl8CmLmDyM4uTo",
-        "title": "Reel 2",
-        "instagramUrl": "https://www.instagram.com/p/DNjX8A-xiEW/",
-        "embedUrl": "https://www.instagram.com/p/DNjX8A-xiEW/embed",
-        "likes": 0,
-        "comments": 0,
-        "createdAt": "2025-08-21T21:46:48.261Z",
-        "updatedAt": "2025-08-21T21:46:48.261Z"
-      },
-      {
-        "id": "8OmY4awHam9DnNnEzN5vUp",
-        "title": "Reel 3",
-        "instagramUrl": "https://www.instagram.com/p/DNjX8A-xiEW/",
-        "embedUrl": "https://www.instagram.com/p/DNjX8A-xiEW/embed",
-        "likes": 0,
-        "comments": 0,
-        "createdAt": "2025-08-21T21:46:48.261Z",
-        "updatedAt": "2025-08-21T21:46:48.261Z"
-      }]
     } catch (error) {
       console.error('Error in getAllPosts:', error);
       throw error;

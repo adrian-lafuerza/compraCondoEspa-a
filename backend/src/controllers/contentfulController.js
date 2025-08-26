@@ -117,106 +117,6 @@ const getInstagramData = async (req, res) => {
 };
 
 /**
- * Obtener un post específico de Instagram
- */
-const getInstagramPostById = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    if (!CONTENTFUL_SPACE_ID || !CONTENTFUL_ACCESS_TOKEN) {
-      return res.status(500).json({
-        error: 'Configuración de Contentful incompleta'
-      });
-    }
-
-    const response = await axios.get(`${CONTENTFUL_BASE_URL}/entries/${id}`, {
-      params: {
-        access_token: CONTENTFUL_ACCESS_TOKEN
-      }
-    });
-
-    const post = {
-      id: response.data.sys.id,
-      title: response.data.fields.title,
-      description: response.data.fields.description,
-      imageUrl: response.data.fields.image?.fields?.file?.url,
-      instagramUrl: response.data.fields.instagramUrl,
-      likes: response.data.fields.likes || 0,
-      comments: response.data.fields.comments || 0,
-      createdAt: response.data.sys.createdAt,
-      updatedAt: response.data.sys.updatedAt
-    };
-
-    res.json({
-      success: true,
-      data: post
-    });
-
-  } catch (error) {
-    console.error('❌ Error al obtener post específico:', error.message);
-
-    if (error.response?.status === 404) {
-      return res.status(404).json({
-        error: 'Post no encontrado',
-        message: `No se encontró un post con ID: ${req.params.id}`
-      });
-    }
-
-    res.status(500).json({
-      error: 'Error interno del servidor',
-      message: error.message
-    });
-  }
-};
-
-/**
- * Obtener estadísticas de Instagram
- */
-const getInstagramStats = async (req, res) => {
-  try {
-    if (!CONTENTFUL_SPACE_ID || !CONTENTFUL_ACCESS_TOKEN) {
-      return res.status(500).json({
-        error: 'Configuración de Contentful incompleta'
-      });
-    }
-
-    const response = await axios.get(`${CONTENTFUL_BASE_URL}/entries`, {
-      params: {
-        access_token: CONTENTFUL_ACCESS_TOKEN,
-        content_type: 'instagramPost',
-        limit: 1000 // Obtener todos para calcular estadísticas
-      }
-    });
-
-    const posts = response.data.items;
-    const totalPosts = posts.length;
-    const totalLikes = posts.reduce((sum, post) => sum + (post.fields.likes || 0), 0);
-    const totalComments = posts.reduce((sum, post) => sum + (post.fields.comments || 0), 0);
-    const avgLikes = totalPosts > 0 ? Math.round(totalLikes / totalPosts) : 0;
-    const avgComments = totalPosts > 0 ? Math.round(totalComments / totalPosts) : 0;
-
-    res.json({
-      success: true,
-      data: {
-        totalPosts,
-        totalLikes,
-        totalComments,
-        avgLikes,
-        avgComments,
-        engagement: totalPosts > 0 ? ((totalLikes + totalComments) / totalPosts).toFixed(2) : 0
-      }
-    });
-
-  } catch (error) {
-    console.error('❌ Error al obtener estadísticas:', error.message);
-    res.status(500).json({
-      error: 'Error interno del servidor',
-      message: error.message
-    });
-  }
-};
-
-/**
  * Obtener propiedades desde Contentful
  */
 const getProperties = async (req, res) => {
@@ -721,8 +621,6 @@ const getPropertiesByNewPropertyAndLocation = async (req, res) => {
 
 module.exports = {
   getInstagramData,
-  getInstagramPostById,
-  getInstagramStats,
   getProperties,
   getPropertiesByZone,
   getPropertiesByNewPropertyAndLocation,
