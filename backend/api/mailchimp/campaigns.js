@@ -18,22 +18,31 @@ const corsHeaders = {
 // Helper function to extract all images and descriptions from HTML content
 const extractImagesAndDescriptions = (htmlContent) => {
   if (!htmlContent) return { images: [], descriptions: [] };
-  
+
   // Extract all images
-  const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*(?:alt=["']([^"']*)["'])?[^>]*>/gi;
   const images = [];
-  let imgMatch;
+  const imageUrls = new Set(); // Para evitar duplicados
   
-  while ((imgMatch = imgRegex.exec(htmlContent)) !== null) {
-    images.push({
-      url: imgMatch[1],
-      alt: imgMatch[2] || ''
-    });
+  // Usar matchAll para evitar problemas con el estado del regex global
+  const imgMatches = htmlContent.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*(?:alt=["']([^"']*)["'])?[^>]*>/gi);
+  
+  for (const imgMatch of imgMatches) {
+    const url = imgMatch[1];
+    const alt = imgMatch[2] || '';
+    
+    // Solo agregar si la URL no está duplicada
+    if (!imageUrls.has(url)) {
+      imageUrls.add(url);
+      images.push({
+        url: url,
+        alt: alt
+      });
+    }
   }
-  
+
   // Extract descriptions from common HTML elements
   const descriptions = [];
-  
+
   // Extract from p tags
   const pRegex = /<p[^>]*>([^<]+(?:<[^>]+>[^<]*)*?)<\/p>/gi;
   let pMatch;
@@ -43,17 +52,17 @@ const extractImagesAndDescriptions = (htmlContent) => {
       descriptions.push(text);
     }
   }
-  
+
   // Extract from div tags with text content
-  const divRegex = /<div[^>]*>([^<]+(?:<(?!div|img|script|style)[^>]+>[^<]*)*?)<\/div>/gi;
+  const divRegex = /<span[^>]*>([^<]+(?:<(?!div|img|script|style)[^>]+>[^<]*)*?)<\/span>/gi;
   let divMatch;
   while ((divMatch = divRegex.exec(htmlContent)) !== null) {
     const text = divMatch[1].replace(/<[^>]+>/g, '').trim();
     if (text && text.length > 20 && !descriptions.includes(text)) {
-      descriptions.push(text);
+      descriptions.push({ text: text });
     }
   }
-  
+
   // Extract from h1, h2, h3 tags
   const headingRegex = /<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi;
   let headingMatch;
@@ -63,7 +72,7 @@ const extractImagesAndDescriptions = (htmlContent) => {
       descriptions.push(text);
     }
   }
-  
+
   return { images, descriptions };
 };
 
@@ -86,7 +95,6 @@ module.exports = async (req, res) => {
 
     // Verificar variables de entorno
     if (!MAILCHIMP_API_KEY || !MAILCHIMP_SERVER_PREFIX || !MAILCHIMP_LIST_ID) {
-      console.log('⚠️ Variables de entorno de Mailchimp no configuradas');
       return res.status(200).json({
         success: true,
         campaigns: [],
@@ -115,11 +123,8 @@ module.exports = async (req, res) => {
     const cachedData = await mailchimpCacheManager.getCampaigns(searchParams);
     
     if (cachedData) {
-      console.log('📋 Campañas obtenidas del caché global');
       return res.status(200).json(cachedData);
     }
-
-    console.log('🔄 Consultando API de Mailchimp para campañas...');
 
     // Construir parámetros de consulta
     const params = new URLSearchParams({
@@ -150,8 +155,9 @@ module.exports = async (req, res) => {
 
     // Obtener información detallada de cada campaña
     const campaignsWithDetails = [];
+    const storyDrafts = response.data.campaigns.filter(c => c.settings.title.includes("[STORY]"));
     
-    for (const campaign of response.data.campaigns) {
+    for (const campaign of storyDrafts) {
       try {
         // Verificar caché de contenido primero usando el cache manager global
         let contentResponse = await mailchimpCacheManager.getCampaignContent(campaign.id);
@@ -184,14 +190,10 @@ module.exports = async (req, res) => {
           id: campaign.id,
           type: campaign.type,
           status: campaign.status,
-          // Subject line como título del artículo
           subject_line: campaign.settings?.subject_line || 'Sin asunto',
           title: campaign.settings?.title || 'Sin título',
-          // Preview text como descripción corta
           preview_text: campaign.settings?.preview_text || '',
-          // Imágenes extraídas del contenido
           images: images,
-          // Descripciones extraídas del contenido
           descriptions: descriptions,
           from_name: campaign.settings?.from_name || 'Sin remitente',
           reply_to: campaign.settings?.reply_to || 'Sin respuesta',

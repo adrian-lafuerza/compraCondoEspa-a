@@ -13,6 +13,66 @@ if (!MAILCHIMP_API_KEY || !MAILCHIMP_SERVER_PREFIX || !MAILCHIMP_LIST_ID) {
 
 const MAILCHIMP_BASE_URL = `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0`;
 
+const extractImagesAndDescriptions = (htmlContent) => {
+  if (!htmlContent) return { images: [], descriptions: [] };
+
+  // Extract all images
+  const images = [];
+  const imageUrls = new Set(); // Para evitar duplicados
+  
+  // Usar matchAll para evitar problemas con el estado del regex global
+  const imgMatches = htmlContent.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*(?:alt=["']([^"']*)["'])?[^>]*>/gi);
+  
+  for (const imgMatch of imgMatches) {
+    const url = imgMatch[1];
+    const alt = imgMatch[2] || '';
+    
+    // Solo agregar si la URL no está duplicada
+    if (!imageUrls.has(url)) {
+      imageUrls.add(url);
+      images.push({
+        url: url,
+        alt: alt
+      });
+    }
+  }
+
+  // Extract descriptions from common HTML elements
+  const descriptions = [];
+
+  // Extract from p tags
+  const pRegex = /<p[^>]*>([^<]+(?:<[^>]+>[^<]*)*?)<\/p>/gi;
+  let pMatch;
+  while ((pMatch = pRegex.exec(htmlContent)) !== null) {
+    const text = pMatch[1].replace(/<[^>]+>/g, '').trim();
+    if (text && text.length > 20) { // Only meaningful descriptions
+      descriptions.push(text);
+    }
+  }
+
+  // Extract from div tags with text content
+  const divRegex = /<span[^>]*>([^<]+(?:<(?!div|img|script|style)[^>]+>[^<]*)*?)<\/span>/gi;
+  let divMatch;
+  while ((divMatch = divRegex.exec(htmlContent)) !== null) {
+    const text = divMatch[1].replace(/<[^>]+>/g, '').trim();
+    if (text && text.length > 20 && !descriptions.includes(text)) {
+      descriptions.push({ text: text });
+    }
+  }
+
+  // Extract from h1, h2, h3 tags
+  const headingRegex = /<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi;
+  let headingMatch;
+  while ((headingMatch = headingRegex.exec(htmlContent)) !== null) {
+    const text = headingMatch[1].trim();
+    if (text && !descriptions.includes(text)) {
+      descriptions.push(text);
+    }
+  }
+
+  return { images, descriptions };
+};
+
 
 /**
  * Obtener todas las campañas de Mailchimp
@@ -25,7 +85,6 @@ const getCampaigns = async (req, res) => {
 
     // Crear clave de caché basada en los parámetros de búsqueda
     const searchParams = {
-      status: status || 'all',
       type: type || 'all',
       count: parseInt(count),
       offset: parseInt(offset),
@@ -36,7 +95,7 @@ const getCampaigns = async (req, res) => {
 
     // Verificar caché primero
     const cachedData = await mailchimpCache.get(cacheKey);
-    
+
     if (cachedData) {
       console.log('📋 Campañas obtenidas del caché');
       return res.status(200).json(cachedData);
@@ -49,16 +108,15 @@ const getCampaigns = async (req, res) => {
       count: count.toString(),
       offset: offset.toString(),
       sort_field: 'create_time',
-      sort_dir: 'DESC'
+      sort_dir: 'DESC',
     });
 
     // Agregar filtros opcionales
-    if (status) {
-      params.append('status', status);
-    }
     if (type) {
       params.append('type', type);
     }
+
+
 
     const response = await axios.get(
       `${MAILCHIMP_BASE_URL}/campaigns?${params.toString()}`,
@@ -70,64 +128,15 @@ const getCampaigns = async (req, res) => {
       }
     );
 
-    console.log(response.data.campaigns);
-    
+    const storyDrafts = response.data.campaigns.filter(c => c.settings.title.includes("[STORY]"));
+
+
     // Helper function to extract all images and descriptions from HTML content
-    const extractImagesAndDescriptions = (htmlContent) => {
-      if (!htmlContent) return { images: [], descriptions: [] };
-      
-      // Extract all images
-      const imgRegex = /<img[^>]+src=["']([^"']+)["'][^>]*(?:alt=["']([^"']*)["'])?[^>]*>/gi;
-      const images = [];
-      let imgMatch;
-      
-      while ((imgMatch = imgRegex.exec(htmlContent)) !== null) {
-        images.push({
-          url: imgMatch[1],
-          alt: imgMatch[2] || ''
-        });
-      }
-      
-      // Extract descriptions from common HTML elements
-      const descriptions = [];
-      
-      // Extract from p tags
-      const pRegex = /<p[^>]*>([^<]+(?:<[^>]+>[^<]*)*?)<\/p>/gi;
-      let pMatch;
-      while ((pMatch = pRegex.exec(htmlContent)) !== null) {
-        const text = pMatch[1].replace(/<[^>]+>/g, '').trim();
-        if (text && text.length > 20) { // Only meaningful descriptions
-          descriptions.push(text);
-        }
-      }
-      
-      // Extract from div tags with text content
-      const divRegex = /<div[^>]*>([^<]+(?:<(?!div|img|script|style)[^>]+>[^<]*)*?)<\/div>/gi;
-      let divMatch;
-      while ((divMatch = divRegex.exec(htmlContent)) !== null) {
-        const text = divMatch[1].replace(/<[^>]+>/g, '').trim();
-        if (text && text.length > 20 && !descriptions.includes(text)) {
-          descriptions.push(text);
-        }
-      }
-      
-      // Extract from h1, h2, h3 tags
-      const headingRegex = /<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi;
-      let headingMatch;
-      while ((headingMatch = headingRegex.exec(htmlContent)) !== null) {
-        const text = headingMatch[1].trim();
-        if (text && !descriptions.includes(text)) {
-          descriptions.push(text);
-        }
-      }
-      
-      return { images, descriptions };
-    };
 
     // Obtener información detallada de cada campaña
     const campaignsWithDetails = [];
-    
-    for (const campaign of response.data.campaigns) {
+
+    for (const campaign of storyDrafts) {
       try {
         // Obtener el contenido de la campaña
         const contentResponse = await axios.get(
@@ -142,6 +151,7 @@ const getCampaigns = async (req, res) => {
 
         const htmlContent = contentResponse.data.html || '';
         const { images, descriptions } = extractImagesAndDescriptions(htmlContent);
+
 
         const campaignData = {
           id: campaign.id,
@@ -175,12 +185,12 @@ const getCampaigns = async (req, res) => {
             click_rate: campaign.report_summary?.click_rate || 0
           }
         };
-        
+
         // Solo incluir HTML si se solicita explícitamente
         if (includeHtml === 'true') {
           campaignData.content_html = htmlContent;
         }
-        
+
         campaignsWithDetails.push(campaignData);
       } catch (error) {
         console.warn(`⚠️ Error al obtener contenido de campaña ${campaign.id}:`, error.message);
@@ -213,12 +223,12 @@ const getCampaigns = async (req, res) => {
             click_rate: campaign.report_summary?.click_rate || 0
           }
         };
-        
+
         // Solo incluir HTML vacío si se solicita explícitamente
         if (includeHtml === 'true') {
           fallbackCampaign.content_html = '';
         }
-        
+
         campaignsWithDetails.push(fallbackCampaign);
       }
     }
@@ -268,7 +278,7 @@ const getCampaignById = async (req, res) => {
     // Verificar caché primero
     const cacheKey = `${MailchimpCacheKeys.CAMPAIGNS}:detail:${campaignId}`;
     const cachedData = await mailchimpCache.get(cacheKey);
-    
+
     if (cachedData) {
       console.log(`📋 Detalles de campaña ${campaignId} obtenidos del caché`);
       return res.status(200).json(cachedData);
@@ -286,7 +296,30 @@ const getCampaignById = async (req, res) => {
       }
     );
 
+    if (!response.data) {
+      return res.status(404).json({
+        success: false,
+        message: 'Campaña no encontrada'
+      });
+    }
+
+    const contentResponse = await axios.get(
+      `${MAILCHIMP_BASE_URL}/campaigns/${response.data.id}/content`,
+      {
+        headers: {
+          'Authorization': `Bearer ${MAILCHIMP_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const htmlContent = contentResponse.data.html || '';
+
+
+    const { images, descriptions } = extractImagesAndDescriptions(htmlContent);
+
     const campaign = response.data;
+
 
     const responseData = {
       success: true,
@@ -294,6 +327,7 @@ const getCampaignById = async (req, res) => {
         id: campaign.id,
         type: campaign.type,
         status: campaign.status,
+        images, descriptions,
         settings: {
           subject_line: campaign.settings?.subject_line,
           title: campaign.settings?.title,
@@ -357,7 +391,7 @@ const getCampaignContent = async (req, res) => {
     // Verificar caché primero
     const cacheKey = `${MailchimpCacheKeys.CONTENT}:${campaignId}`;
     const cachedData = await mailchimpCache.get(cacheKey);
-    
+
     if (cachedData) {
       console.log(`📄 Contenido de campaña ${campaignId} obtenido del caché`);
       return res.status(200).json(cachedData);
@@ -377,38 +411,32 @@ const getCampaignContent = async (req, res) => {
 
     const content = response.data;
 
-    // Extraer imágenes del HTML
-    const extractImages = (html) => {
-      if (!html) return [];
-      
-      const imageRegex = /<img[^>]+src="([^">]+)"/gi;
-      const images = [];
-      let match;
-      
-      while ((match = imageRegex.exec(html)) !== null) {
-        images.push({
-          url: match[1],
-          alt: (match[0].match(/alt="([^"]*)"/) || [])[1] || '',
-          title: (match[0].match(/title="([^"]*)"/) || [])[1] || ''
-        });
-      }
-      
-      return images;
-    };
-
     const htmlContent = content.html || '';
     const plainTextContent = content.plain_text || '';
-    const images = extractImages(htmlContent);
+    const { images, descriptions } = extractImagesAndDescriptions(htmlContent);
+
+    console.log(content);
+
 
     const responseData = {
       success: true,
       data: {
         campaign_id: campaignId,
-        html: htmlContent,
+        settings: {
+          subject_line: content.settings?.subject_line,
+          title: content.settings?.title,
+          from_name: content.settings?.from_name,
+          reply_to: content.settings?.reply_to,
+          to_name: content.settings?.to_name,
+          folder_id: content.settings?.folder_id,
+          authenticate: content.settings?.authenticate,
+          auto_footer: content.settings?.auto_footer,
+          inline_css: content.settings?.inline_css
+        },
         plain_text: plainTextContent,
         images: images,
+        descriptions,
         image_count: images.length,
-        archive_html: content.archive_html || '',
         _links: content._links || []
       }
     };

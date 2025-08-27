@@ -20,7 +20,7 @@ const BlogCard = ({ campaign, onClick }) => {
       {/* Imagen */}
       <div className="relative h-48 bg-gray-200">
         <img
-          src={campaign.images[3].url}
+          src={campaign?.images?.length > 1 ? campaign.images[2].url : campaign.images[1].url}
           alt={campaign.images && campaign.images.length > 0 ? campaign.images[0].alt : getCampaignTitle()}
           className="w-full h-full object-cover"
           onError={(e) => {

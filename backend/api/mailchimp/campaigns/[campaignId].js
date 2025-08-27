@@ -1,9 +1,71 @@
+// Helper function to extract all images and descriptions from HTML content
+const extractImagesAndDescriptions = (htmlContent) => {
+  if (!htmlContent) return { images: [], descriptions: [] };
+
+  // Extract all images
+  const images = [];
+  const imageUrls = new Set(); // Para evitar duplicados
+
+  // Usar matchAll para evitar problemas con el estado del regex global
+  const imgMatches = htmlContent.matchAll(/<img[^>]+src=["']([^"']+)["'][^>]*(?:alt=["']([^"']*)["'])?[^>]*>/gi);
+
+  for (const imgMatch of imgMatches) {
+    const url = imgMatch[1];
+    const alt = imgMatch[2] || '';
+
+    // Solo agregar si la URL no está duplicada
+    if (!imageUrls.has(url)) {
+      imageUrls.add(url);
+      images.push({
+        url: url,
+        alt: alt
+      });
+    }
+  }
+
+  // Extract descriptions from common HTML elements
+  const descriptions = [];
+
+  // Extract from p tags
+  const pRegex = /<p[^>]*>([^<]+(?:<[^>]+>[^<]*)*?)<\/p>/gi;
+  let pMatch;
+  while ((pMatch = pRegex.exec(htmlContent)) !== null) {
+    const text = pMatch[1].replace(/<[^>]+>/g, '').trim();
+    if (text && text.length > 20) { // Only meaningful descriptions
+      descriptions.push(text);
+    }
+  }
+
+  // Extract from div tags with text content
+  const divRegex = /<span[^>]*>([^<]+(?:<(?!div|img|script|style)[^>]+>[^<]*)*?)<\/span>/gi;
+  let divMatch;
+  while ((divMatch = divRegex.exec(htmlContent)) !== null) {
+    const text = divMatch[1].replace(/<[^>]+>/g, '').trim();
+    if (text && text.length > 20 && !descriptions.includes(text)) {
+      descriptions.push({ text: text });
+    }
+  }
+
+  // Extract from h1, h2, h3 tags
+  const headingRegex = /<h[1-6][^>]*>([^<]+)<\/h[1-6]>/gi;
+  let headingMatch;
+  while ((headingMatch = headingRegex.exec(htmlContent)) !== null) {
+    const text = headingMatch[1].trim();
+    if (text && !descriptions.includes(text)) {
+      descriptions.push(text);
+    }
+  }
+
+  return { images, descriptions };
+};
+
+
 module.exports = async (req, res) => {
   // Headers CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+
   // Manejar preflight OPTIONS request
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -70,7 +132,29 @@ module.exports = async (req, res) => {
       }
     );
 
-      const campaign = response.data;
+    if (!response.data) {
+      return res.status(404).json({
+        success: false,
+        message: 'Campaña no encontrada'
+      });
+    }
+
+    const contentResponse = await axios.get(
+      `${MAILCHIMP_BASE_URL}/campaigns/${response.data.id}/content`,
+      {
+        headers: {
+          'Authorization': `Bearer ${MAILCHIMP_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const htmlContent = contentResponse.data.html || '';
+
+
+    const { images, descriptions } = extractImagesAndDescriptions(htmlContent);
+
+    const campaign = response.data;
 
     const responseData = {
       success: true,
@@ -78,6 +162,8 @@ module.exports = async (req, res) => {
         id: campaign.id,
         type: campaign.type,
         status: campaign.status,
+        images,
+        descriptions,
         settings: {
           subject_line: campaign.settings?.subject_line,
           title: campaign.settings?.title,
@@ -103,10 +189,10 @@ module.exports = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error en handler de campaña:', error.message);
-    
+
     if (error.response) {
       const status = error.response.status;
-      
+
       if (status === 404) {
         return res.status(404).json({
           success: false,
@@ -114,7 +200,7 @@ module.exports = async (req, res) => {
           message: `No se encontró la campaña con ID: ${req.query.campaignId}`
         });
       }
-      
+
       if (status === 401) {
         return res.status(401).json({
           success: false,
@@ -123,7 +209,7 @@ module.exports = async (req, res) => {
         });
       }
     }
-    
+
     return res.status(500).json({
       success: false,
       error: 'Error interno del servidor',

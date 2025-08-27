@@ -41,7 +41,7 @@ const AppRoutes = () => (
               <Route path="/properties" element={<PropertiesPage />} />
               <Route path="/property/:id" element={<PropertyDetailPage />} />
               <Route path="/blog" element={<BlogPage />} />
-              <Route path="/campaign/:campaignId" element={<CampaignDetailPage />} />
+              <Route path="/blog/campaign/:campaignId" element={<CampaignDetailPage />} />
             </Routes>
           </PageTransition>
         </main>

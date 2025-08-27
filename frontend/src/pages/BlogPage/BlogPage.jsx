@@ -13,47 +13,10 @@ const BlogPage = () => {
   const [error, setError] = useState(null);
 
   const ITEMS_PER_PAGE = 10;
-  const STORAGE_KEY = 'blog_campaigns_state';
-
-  // Cargar estado desde sessionStorage
-  const loadStateFromStorage = () => {
-    try {
-      const savedState = sessionStorage.getItem(STORAGE_KEY);
-      if (savedState) {
-        const { campaigns: savedCampaigns, totalItems: savedTotal, hasMore: savedHasMore } = JSON.parse(savedState);
-        setCampaigns(savedCampaigns);
-        setTotalItems(savedTotal);
-        setHasMore(savedHasMore);
-        return true;
-      }
-    } catch (err) {
-      console.error('Error loading state from storage:', err);
-    }
-    return false;
-  };
-
-  // Guardar estado en sessionStorage
-  const saveStateToStorage = (campaignsData, totalItemsData, hasMoreData) => {
-    try {
-      const state = {
-        campaigns: campaignsData,
-        totalItems: totalItemsData,
-        hasMore: hasMoreData
-      };
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (err) {
-      console.error('Error saving state to storage:', err);
-    }
-  };
 
   // Cargar campañas iniciales
   useEffect(() => {
-    const hasStoredState = loadStateFromStorage();
-    if (!hasStoredState) {
-      loadInitialCampaigns();
-    } else {
-      setLoading(false);
-    }
+    loadInitialCampaigns();
   }, []);
 
   const loadInitialCampaigns = async () => {
@@ -76,9 +39,6 @@ const BlogPage = () => {
         setCampaigns(newCampaigns);
         setTotalItems(newTotalItems);
         setHasMore(newHasMore);
-
-        // Guardar estado inicial
-        saveStateToStorage(newCampaigns, newTotalItems, newHasMore);
       }
     } catch (err) {
       console.error('Error loading initial campaigns:', err);
@@ -111,9 +71,6 @@ const BlogPage = () => {
 
         setCampaigns(updatedCampaigns);
         setHasMore(updatedHasMore);
-
-        // Guardar estado actualizado
-        saveStateToStorage(updatedCampaigns, response.data.total_items, updatedHasMore);
       }
     } catch (err) {
       console.error('Error loading more campaigns:', err);
@@ -126,7 +83,7 @@ const BlogPage = () => {
 
 
   const handleCampaignClick = (campaign) => {
-    navigate(`/campaign/${campaign.id}`);
+    navigate(`/blog/campaign/${campaign.id}`, { state: { campaign } });
   };
 
   const handleLoadMore = () => {
@@ -137,6 +94,7 @@ const BlogPage = () => {
 
   // Las campañas ya vienen filtradas por status='sent' desde el servidor
   const sentCampaigns = campaigns;
+  
 
   if ((loading || cacheLoading) && campaigns.length === 0) {
     return (
@@ -188,7 +146,7 @@ const BlogPage = () => {
         </div>
 
         {/* Botón de cargar más */}
-        {hasMore && sentCampaigns.length > 0 && (
+        {hasMore && sentCampaigns.length > 9 && (
           <div className="text-center pt-8">
             <button
               onClick={handleLoadMore}
