@@ -1,5 +1,23 @@
 const axios = require('axios');
 
+// Función para normalizar tipos de operación
+const normalizeOperationType = (operationType) => {
+  if (!operationType) return 'sell';
+  
+  const type = operationType.toLowerCase();
+  
+  // Mapear valores de Contentful a valores estándar
+  const operationMap = {
+    'venta': 'sell',
+    'alquiler': 'rent',
+    'sell': 'sell',
+    'rent': 'rent',
+    'sale': 'sell'
+  };
+  
+  return operationMap[type] || 'sell';
+};
+
 // Configuración de Contentful
 const CONTENTFUL_SPACE_ID = process.env.CONTENTFUL_SPACE_ID;
 const CONTENTFUL_ACCESS_TOKEN = process.env.CONTENTFUL_ACCESS_TOKEN;
@@ -84,7 +102,7 @@ module.exports = async function handler(req, res) {
         propertyType: item.fields.propertyType,
         propertyZone: item.fields.propertyZone,
         operation: {
-          type: item.fields.operationType || 'sale',
+          type: normalizeOperationType(item.fields.operationType) || 'sell',
           price: item.fields.price,
           features: item.fields.features,
         },
