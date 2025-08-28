@@ -5,7 +5,8 @@ const {
   getProperties,
   getPropertiesByZone,
   getPropertiesByNewPropertyAndLocation,
-  getStories
+  getStories,
+  getPropertyById
 } = require('../controllers/contentfulController');
 
 /**
@@ -45,5 +46,11 @@ router.get('/properties/newproperty/:newProperty/location/:location', getPropert
  */
 router.get('/stories', getStories);
 
+/**
+ * @route GET /api/contentful/properties/:propertyId
+ * @desc Obtener una propiedad específica por ID desde Contentful
+ * @access Public
+ */
+router.get('/properties/:propertyId', getPropertyById);
 
 module.exports = router;

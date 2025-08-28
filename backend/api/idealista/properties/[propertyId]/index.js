@@ -157,6 +157,8 @@ const searchInAllProperties = async (propertyId) => {
 
         if (response.data && response.data.properties) {
             const property = response.data.properties.find(prop => 
+                prop.propertyCode === propertyId || 
+                prop.propertyCode === parseInt(propertyId) ||
                 prop.propertyId === propertyId || 
                 prop.propertyId === parseInt(propertyId) ||
                 prop.id === propertyId ||
@@ -165,7 +167,12 @@ const searchInAllProperties = async (propertyId) => {
             
             if (property) {
                 console.log(`✅ Propiedad ${propertyId} encontrada en búsqueda general`);
-                return property;
+                // Obtener imágenes de la propiedad
+                const images = await getPropertyImages(propertyId);
+                return {
+                    ...property,
+                    images: images
+                };
             }
         }
         
@@ -257,8 +264,11 @@ module.exports = async (req, res) => {
 
         console.log(`🔍 Buscando propiedad con ID: ${propertyId}`);
 
-        // Verificar en caché individual primero
-        let cachedProperty = await cacheManager.getProperty(propertyId);
+        // 1. Verificar caché individual primero
+        console.log(`🔍 Verificando caché individual para propiedad ${propertyId}...`);
+        const cacheKey = `properties:${propertyId}`;
+        const cachedProperty = await cacheManager.cache.get(cacheKey);
+        
         if (cachedProperty) {
             console.log(`✅ Propiedad ${propertyId} encontrada en caché individual`);
             
@@ -276,33 +286,31 @@ module.exports = async (req, res) => {
             });
         }
 
-        // Si no está en caché, buscar en todas las propiedades
-        console.log(`🔍 Propiedad no encontrada en caché, buscando en todas las propiedades...`);
+        // 2. Buscar en caché de todas las propiedades
+        console.log(`🔍 Buscando en caché de todas las propiedades...`);
+        const allPropertiesKey = 'properties';
+        const allProperties = await cacheManager.cache.get(allPropertiesKey);
         
-        const allCachedProperties = await cacheManager.getAllProperties();
-        if (allCachedProperties && allCachedProperties.length > 0) {
-            const foundProperty = allCachedProperties.find(prop => 
+        if (allProperties && allProperties.properties) {
+            const property = allProperties.properties.find(prop => 
                 prop.propertyId === propertyId || 
                 prop.propertyId === parseInt(propertyId) ||
                 prop.id === propertyId ||
-                prop.id === parseInt(propertyId) ||
-                prop.propertyCode === propertyId || 
-                prop.externalReference === propertyId
+                prop.id === parseInt(propertyId)
             );
             
-            if (foundProperty) {
-                console.log(`✅ Propiedad ${propertyId} encontrada en caché de todas las propiedades`);
-                
-                // Guardar en caché individual para futuras consultas
-                await cacheManager.setProperty(propertyId, foundProperty);
+            if (property) {
+                // Guardar en caché individual
+                await cacheManager.cache.set(cacheKey, property, cacheManager.ttl.PROPERTIES);
                 
                 // Obtener imágenes de la propiedad
                 const images = await getPropertyImages(propertyId);
                 
+                console.log(`✅ Propiedad ${propertyId} encontrada en caché de todas las propiedades`);
                 return res.status(200).json({
                     success: true,
                     data: {
-                        ...foundProperty,
+                        ...property,
                         images: images
                     },
                     message: `Property ${propertyId} found successfully`,
@@ -311,7 +319,14 @@ module.exports = async (req, res) => {
             }
         }
 
+        // Si no está en caché, buscar en la API de Idealista
+        console.log(`🔍 Propiedad no encontrada en caché, consultando API de Idealista...`);
+
         // Verificar configuración de Idealista
+        console.log(`🔍 Verificando credenciales de Idealista...`);
+        console.log(`CLIENT_ID exists: ${!!process.env.IDEALISTA_CLIENT_ID}`);
+        console.log(`CLIENT_SECRET exists: ${!!process.env.IDEALISTA_CLIENT_SECRET}`);
+        
         if (!process.env.IDEALISTA_CLIENT_ID || !process.env.IDEALISTA_CLIENT_SECRET) {
             console.log(`⚠️ Credenciales de Idealista no configuradas, usando datos de fallback para ${propertyId}`);
             const fallbackProperty = generateFallbackProperty(propertyId);
@@ -341,7 +356,7 @@ module.exports = async (req, res) => {
                 const images = await getPropertyImages(propertyId);
                 
                 // Guardar en caché individual
-                await cacheManager.setProperty(propertyId, specificProperty);
+                await cacheManager.cache.set(cacheKey, specificProperty, cacheManager.ttl.PROPERTIES);
                 
                 return res.status(200).json({
                     success: true,
@@ -357,22 +372,28 @@ module.exports = async (req, res) => {
             console.error(`Error consultando API de Idealista para propiedad ${propertyId}:`, apiError.message);
         }
         
-        // Si no se encuentra con búsqueda específica, buscar en todas las propiedades como fallback
-        const fallbackProperty = await searchInAllProperties(propertyId);
+        // 3. Si no se encuentra con búsqueda específica, buscar en todas las propiedades como fallback
+        console.log(`🔍 Búsqueda específica fallida, buscando en todas las propiedades...`);
         
-        if (fallbackProperty) {
-            // Guardar en caché individual
-            await cacheManager.setProperty(propertyId, fallbackProperty);
+        try {
+            const fallbackProperty = await searchInAllProperties(propertyId);
             
-            console.log(`✅ Propiedad ${propertyId} encontrada en API`);
-            return res.status(200).json({
-                success: true,
-                data: fallbackProperty,
-                message: `Property ${propertyId} found successfully`,
-                source: 'idealista-api'
-            });
+            if (fallbackProperty) {
+                // Guardar en caché individual
+                await cacheManager.cache.set(cacheKey, fallbackProperty, cacheManager.ttl.PROPERTIES);
+                
+                console.log(`✅ Propiedad ${propertyId} encontrada en API`);
+                return res.status(200).json({
+                    success: true,
+                    data: fallbackProperty,
+                    message: `Property ${propertyId} found successfully`,
+                    source: 'idealista-api'
+                });
+            }
+        } catch (fallbackError) {
+            console.error(`Error en búsqueda de fallback para propiedad ${propertyId}:`, fallbackError.message);
         }
-
+        
         // Si no se encuentra la propiedad
         return res.status(404).json({
             success: false,
@@ -382,45 +403,19 @@ module.exports = async (req, res) => {
     } catch (error) {
         console.error('Error en getPropertyById:', error);
         
-        // Si hay error con la API de Idealista, devolver datos de ejemplo para la propiedad solicitada
-        const fallbackProperty = {
-            id: propertyId,
-            propertyId: propertyId,
-            title: `Propiedad ${propertyId} - API no disponible`,
-            price: 350000,
-            currency: "EUR",
-            size: 85,
-            rooms: 3,
-            bathrooms: 2,
-            location: {
-                address: "Dirección no disponible",
-                city: "Madrid",
-                province: "Madrid",
-                postalCode: "28001",
-                coordinates: {
-                    latitude: 40.4168,
-                    longitude: -3.7038
-                }
-            },
-            description: `Esta es una propiedad de ejemplo para el ID ${propertyId}. La API de Idealista no está disponible en este momento. Por favor, configure las credenciales correctas.`,
-            features: ["Ascensor", "Calefacción", "Aire acondicionado"],
-            images: [],
-            propertyType: "homes",
-            operation: "sale",
-            energyRating: "N/A",
-            publishedDate: new Date().toISOString().split('T')[0],
-            contact: {
-                phone: null,
-                email: null
-            }
-        };
+        // Si hay error con la API de Idealista, devolver datos de fallback usando la función existente
+        console.log(`⚠️ Error en API, usando datos de fallback para ${propertyId}`);
+        const fallbackProperty = generateFallbackProperty(propertyId);
         
         return res.status(200).json({
-            success: false,
-            data: fallbackProperty,
-            message: `Error conectando con Idealista API. Mostrando datos de ejemplo para la propiedad ${propertyId}.`,
-            error: error.message,
-            source: 'fallback'
+            success: true,
+            data: {
+                message: "Propiedad no encontrada, datos de ejemplo",
+                success: true,
+                property: fallbackProperty,
+                images: [],
+                source: 'fallback'
+            }
         });
     }
 };

@@ -102,7 +102,8 @@ export const PropertyProvider = ({ children }) => {
       setAttemptedPropertyIds(prev => new Set([...prev, normalizedId]));
 
       // Si no está en las propiedades cargadas y no se ha intentado antes, buscar directamente por ID
-      const response = await propertyService.getPropertyById(id);
+      // Por defecto usar Contentful, solo usar Idealista si es Madrid
+      const response = await propertyService.getContentfulPropertyById(id);
     
       if (response.success && response.data) {
         const foundProperty = response.data;

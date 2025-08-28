@@ -10,6 +10,52 @@ if (!CONTENTFUL_SPACE_ID || !CONTENTFUL_ACCESS_TOKEN) {
   console.error('❌ ERROR: Debes configurar CONTENTFUL_SPACE_ID y CONTENTFUL_ACCESS_TOKEN en .env');
 }
 
+// Función para resolver imágenes desde Contentful
+const resolveImages = async (imageRefs, includes) => {
+  if (!imageRefs || !Array.isArray(imageRefs)) {
+    return [];
+  }
+
+  const images = [];
+
+  for (const imgRef of imageRefs) {
+    try {
+      let asset = null;
+
+      // Primero intentar buscar en includes si están disponibles
+      if (includes?.Asset) {
+        asset = includes.Asset.find(a => a.sys.id === imgRef.sys.id);
+      }
+
+      // Si no hay includes o no se encontró el asset, hacer consulta directa
+      if (!asset) {
+        const assetResponse = await axios.get(`${CONTENTFUL_BASE_URL}/assets/${imgRef.sys.id}`, {
+          params: {
+            access_token: CONTENTFUL_ACCESS_TOKEN
+          }
+        });
+        asset = assetResponse.data;
+      }
+
+      if (asset?.fields?.file?.url) {
+        images.push({
+          url: `https:${asset.fields.file.url}`,
+          title: asset.fields.title || '',
+          description: asset.fields.description || '',
+          width: asset.fields.file.details?.image?.width,
+          height: asset.fields.file.details?.image?.height,
+          size: asset.fields.file.details?.size
+        });
+      }
+    } catch (error) {
+      console.error(`❌ Error al resolver imagen ${imgRef.sys.id}:`, error.message);
+      // Continuar con las demás imágenes aunque una falle
+    }
+  }
+
+  return images;
+};
+
 // Datos de prueba para Instagram con URLs reales
 const mockInstagramData = [
   {
@@ -619,10 +665,123 @@ const getPropertiesByNewPropertyAndLocation = async (req, res) => {
   }
 };
 
+/**
+ * Obtener una propiedad específica por ID desde Contentful
+ */
+const getPropertyById = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+
+    // Validar que se proporcione el ID
+    if (!propertyId) {
+      return res.status(400).json({
+        success: false,
+        error: 'ID de propiedad requerido',
+        message: 'Debe proporcionar un ID de propiedad'
+      });
+    }
+
+    // Verificar configuración
+    if (!CONTENTFUL_SPACE_ID || !CONTENTFUL_ACCESS_TOKEN) {
+      console.log('⚠️ Contentful no configurado para propiedades');
+      return res.status(500).json({
+        success: false,
+        error: 'Configuración de Contentful incompleta',
+        message: 'CONTENTFUL_SPACE_ID y CONTENTFUL_ACCESS_TOKEN son requeridos'
+      });
+    }
+
+    // Realizar petición a Contentful para obtener la entrada específica
+    const response = await axios.get(`${CONTENTFUL_BASE_URL}/entries/${propertyId}`, {
+      params: {
+        access_token: CONTENTFUL_ACCESS_TOKEN,
+        include: 2 // Incluir assets relacionados (imágenes)
+      }
+    });
+
+    const item = response.data;
+
+    console.log(response);
+    
+
+    // Verificar que sea del content type correcto
+    if (item.sys.contentType.sys.id !== 'properties') {
+      return res.status(404).json({
+        success: false,
+        error: 'Propiedad no encontrada',
+        message: `La entrada con ID ${propertyId} no es una propiedad`
+      });
+    }
+
+    // Procesar la propiedad
+    const property = {
+      propertyId: item.fields.propertyId || item.sys.id,
+      title: item.fields.title,
+      reference: 'ex-' + (item.sys.id ? item.sys.id.slice(-4) : ''),
+      descriptions: [item.fields.description] || [],
+      currency: item.fields.currency || 'EUR',
+      address: {
+        streetName: item.fields.address,
+      },
+      features: {
+        areaConstructed: item.fields.areaConstructed || 0,
+        energyCertificateRating: item.fields.energyCertificateRating || 0,
+        rooms: item.fields.rooms || 0,
+        bathroomNumber: item.fields.bathroomNumber || 0,
+      },
+      images: await resolveImages(item.fields.images, response.data.includes),
+       propertyType: item.fields.propertyType,
+      propertyZone: item.fields.propertyZone,
+      operation: {
+        type: item.fields.operationType || 'sale',
+        price: item.fields.price,
+        features: item.fields.features,
+      },
+      state: item.fields.status || 'active',
+      isActive: item.fields.isActive !== false, // Por defecto true
+      createdAt: item.sys.createdAt,
+      updatedAt: item.sys.updatedAt
+    };
+
+    res.json({
+      success: true,
+      data: property,
+      message: `Propiedad ${propertyId} obtenida desde Contentful`
+    });
+
+  } catch (error) {
+    console.error(`❌ Error al obtener propiedad ${req.params.propertyId} desde Contentful:`, error.message);
+
+    // Manejo específico de errores
+    if (error.response?.status === 404) {
+      return res.status(404).json({
+        success: false,
+        error: 'Propiedad no encontrada',
+        message: `La propiedad con ID ${req.params.propertyId} no existe en Contentful`
+      });
+    }
+
+    if (error.response?.status === 401) {
+      return res.status(401).json({
+        success: false,
+        error: 'Token de acceso inválido',
+        message: 'Verifica tu CONTENTFUL_ACCESS_TOKEN'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor',
+      message: error.message
+    });
+  }
+};
+
 module.exports = {
   getInstagramData,
   getProperties,
   getPropertiesByZone,
   getPropertiesByNewPropertyAndLocation,
-  getStories
+  getStories,
+  getPropertyById
 };

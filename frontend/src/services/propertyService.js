@@ -835,7 +835,7 @@ export const propertyService = {
   },
 
   /**
-   * Obtener una propiedad específica por ID
+   * Obtener una propiedad específica por ID desde Idealista
    * @param {string|number} id - ID de la propiedad
    * @returns {Promise<Object>} Datos de la propiedad
    */
@@ -852,6 +852,28 @@ export const propertyService = {
       return { data: { ...data.data, images: data.data.images, propertyId: data.data.propertyId  }, success: data.success };
     } catch (error) {
       console.error('Error fetching property:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Obtener una propiedad específica por ID desde Contentful
+   * @param {string|number} id - ID de la propiedad en Contentful
+   * @returns {Promise<Object>} Datos de la propiedad
+   */
+  async getContentfulPropertyById(id) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/contentful/properties/${id}`);
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      return { data: data.data, success: data.success };
+    } catch (error) {
+      console.error('Error fetching Contentful property:', error);
       throw error;
     }
   },
