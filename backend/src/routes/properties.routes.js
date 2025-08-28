@@ -1,5 +1,5 @@
 const express = require('express');
-const { getProperties, getPropertyImagesController } = require('../controllers/idealista.controller');
+const { getProperties, getPropertyImagesController, getPropertyById } = require('../controllers/idealista.controller');
 const { idealistaAuth } = require('../utils/idealistaAuth.middleware');
 const { redisCache } = require('../utils/nodeCache');
 
@@ -10,6 +10,9 @@ router.use(idealistaAuth.middleware());
 
 // Ruta para obtener propiedades (ahora con autenticación automática)
 router.get('/properties', getProperties);
+
+// Ruta para obtener una propiedad específica por ID
+router.get('/properties/:propertyId', getPropertyById);
 
 // Ruta para obtener imágenes de una propiedad específica
 router.get('/properties/:propertyId/images', getPropertyImagesController);

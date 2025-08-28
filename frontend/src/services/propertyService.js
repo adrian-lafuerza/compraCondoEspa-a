@@ -848,7 +848,8 @@ export const propertyService = {
       }
 
       const data = await response.json();
-      return data;
+      
+      return { data: { ...data.data, images: data.data.images, propertyId: data.data.propertyId  }, success: data.success };
     } catch (error) {
       console.error('Error fetching property:', error);
       throw error;
@@ -926,7 +927,6 @@ export const propertyService = {
       }
 
       const data = await response.json();
-      console.log('PropertyService: Received data:', data);
       
       // Asegurar que devolvemos el formato esperado
       if (data && data.success) {
@@ -953,7 +953,6 @@ export const propertyService = {
    */
   async getPropertiesByNewProperty(newProperty) {
     try {
-      console.log('PropertyService: Fetching properties for newProperty:', newProperty);
 
       const url = `${API_BASE_URL}/contentful/properties/newproperty/${encodeURIComponent(newProperty)}`;
 
@@ -964,7 +963,6 @@ export const propertyService = {
       }
 
       const data = await response.json();
-      console.log('PropertyService: Received data for newProperty:', data);
       return data;
 
     } catch (error) {
@@ -981,7 +979,6 @@ export const propertyService = {
    */
   async getPropertiesByNewPropertyAndLocation(newProperty, location) {
     try {
-      console.log('PropertyService: Fetching properties for newProperty:', newProperty, 'and location:', location);
 
       const url = `${API_BASE_URL}/contentful/properties/newproperty/${encodeURIComponent(newProperty)}/location/${encodeURIComponent(location)}`;
 
@@ -992,7 +989,8 @@ export const propertyService = {
       }
 
       const data = await response.json();
-      console.log('PropertyService: Received data for newProperty and location:', data);
+
+      
       return data;
 
     } catch (error) {

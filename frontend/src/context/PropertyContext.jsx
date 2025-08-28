@@ -78,8 +78,6 @@ export const PropertyProvider = ({ children }) => {
       setError(null);
       setCurrentProperty(null);
 
-      console.log('🔍 Buscando propiedad con ID:', id);
-
       // Primero buscar en las propiedades ya cargadas
       const existingProperty = properties.find(property =>
         property.propertyId === id ||
@@ -89,7 +87,6 @@ export const PropertyProvider = ({ children }) => {
       );
 
       if (existingProperty) {
-        console.log('🎯 Propiedad encontrada en propiedades cargadas:', existingProperty.propertyId);
         setCurrentProperty(existingProperty);
         setError(null);
         return existingProperty;
@@ -98,65 +95,37 @@ export const PropertyProvider = ({ children }) => {
       // Verificar si ya se intentó cargar esta propiedad específica
       const normalizedId = String(id);
       if (attemptedPropertyIds.has(normalizedId)) {
-        console.log('⚠️ Propiedad ya intentada anteriormente:', id);
         throw new Error(`Propiedad con ID ${id} no encontrada`);
       }
 
       // Marcar como intentada antes de cargar
       setAttemptedPropertyIds(prev => new Set([...prev, normalizedId]));
 
-      // Si no está en las propiedades cargadas y no se ha intentado antes, cargar todas las propiedades
-      console.log('🔍 Propiedad no encontrada en cache, cargando todas las propiedades...');
-      const response = await propertyService.getProperties();
+      // Si no está en las propiedades cargadas y no se ha intentado antes, buscar directamente por ID
+      const response = await propertyService.getPropertyById(id);
     
-      if (response) {
-        const transformedProperties = response.map(prop =>
-          propertyService.transformProperty(prop)
-        );
-
-        // Actualizar el estado
-        setProperties(transformedProperties);
-
-        // Buscar en las propiedades recién cargadas
-        const foundProperty = transformedProperties.find(property =>
-          property.propertyId === id ||
-          property.propertyId === parseInt(id) ||
-          property.id === id ||
-          property.id === parseInt(id)
-        );
-
-        if (foundProperty) {
-          console.log('✅ Propiedad encontrada después de cargar:', foundProperty.propertyId);
-          setCurrentProperty(foundProperty);
-          setError(null);
-          return foundProperty;
-        }
+      if (response.success && response.data) {
+        const foundProperty = response.data;
+        
+        setCurrentProperty(foundProperty);
+        setError(null);
+        
+        // Agregar la propiedad al array de propiedades si no existe
+        setProperties(prevProperties => {
+          const exists = prevProperties.some(prop => 
+            prop.propertyId === foundProperty.propertyId ||
+            prop.id === foundProperty.id
+          );
+          
+          if (!exists) {
+            return [...prevProperties, foundProperty];
+          }
+          
+          return prevProperties;
+        });
+        
+        return foundProperty;
       }
-
-      // if (response.success && response.data && response.data.properties) {
-      //   // Transformar propiedades
-      //   const transformedProperties = response.data.properties.map(prop =>
-      //     propertyService.transformProperty(prop)
-      //   );
-
-      //   // Actualizar el estado
-      //   setProperties(transformedProperties);
-
-      //   // Buscar en las propiedades recién cargadas
-      //   const foundProperty = transformedProperties.find(property =>
-      //     property.propertyId === id ||
-      //     property.propertyId === parseInt(id) ||
-      //     property.id === id ||
-      //     property.id === parseInt(id)
-      //   );
-
-      //   if (foundProperty) {
-      //     console.log('✅ Propiedad encontrada después de cargar:', foundProperty.propertyId);
-      //     setCurrentProperty(foundProperty);
-      //     setError(null);
-      //     return foundProperty;
-      //   }
-      // }
 
       throw new Error(`Propiedad con ID ${id} no encontrada`);
     } catch (err) {
