@@ -1,6 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useCampaignCache } from '../../context/CampaignCacheContext';
+import ShareModal from '../../components/ShareModal/ShareModal';
+import RubenPhoto from '../../assets/ruben-photo.png';
+
+import { childVariants, hoverVariants, scaleInVariants } from '../../utils/motionVariants';
+import { ShareIcon } from '@heroicons/react/24/outline';
 
 const CampaignDetailPage = () => {
   const { campaignId } = useParams();
@@ -9,6 +15,7 @@ const CampaignDetailPage = () => {
   const { getCampaignById, loading, error } = useCampaignCache();
   const [campaign, setCampaign] = useState(location.state?.campaign || null);
   const [isLoading, setIsLoading] = useState(!location.state?.campaign);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -25,9 +32,9 @@ const CampaignDetailPage = () => {
 
       try {
         setIsLoading(true);
-        
+
         const response = await getCampaignById(campaignId);
-        
+
         if (response && response.success && response.data) {
           setCampaign(response.data);
         }
@@ -60,8 +67,8 @@ const CampaignDetailPage = () => {
       <div className="min-h-screen flex flex-col items-center justify-center bg-white text-center p-8">
         <h2 className="text-red-600 text-2xl font-semibold mb-4">Error al cargar la campaña</h2>
         <p className="text-gray-500 mb-8">{error || 'Campaña no encontrada'}</p>
-        <button 
-          onClick={() => navigate('/project')} 
+        <button
+          onClick={() => navigate('/project')}
           className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 text-sm"
         >
           Volver a proyectos
@@ -81,7 +88,7 @@ const CampaignDetailPage = () => {
     day: 'numeric'
   }) : null;
   const fromName = campaign.settings?.from_name || campaign.from_name || 'Ruben Alfonso';
-  
+
   // Imagen principal (primera imagen disponible)
   const mainImage = campaignImages.length > 0 ? campaignImages[0] : null;
 
@@ -90,8 +97,8 @@ const CampaignDetailPage = () => {
       {/* Header con botón de regreso */}
       <header className="bg-white border-b border-gray-200 py-4">
         <div className="max-w-4xl mx-auto px-4">
-          <button 
-            onClick={() => navigate('/blog')} 
+          <button
+            onClick={() => navigate('/blog')}
             className="cursor-pointer flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors duration-200 text-sm"
           >
             ← Volver a Historias
@@ -102,34 +109,59 @@ const CampaignDetailPage = () => {
       {/* Contenido principal */}
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Título y metadatos */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6 leading-tight">
-            {campaignTitle}
-          </h1>
-          <div className="flex justify-center items-center">
-            <img 
-              src={`${import.meta.env.BASE_URL}images/RUBEN FOTO 1.png`}
-              alt="Ruben Alfonso" 
+        <motion.div
+          className="flex items-center justify-between mb-8 text-sm text-gray-600"
+          variants={childVariants}
+        >
+          <div className="flex items-center">
+            <motion.img
+              src={RubenPhoto}
+              alt="Ruben Alfonso"
               className="w-18 h-18 rounded-full mr-3 object-cover border border-gray-700"
+              variants={scaleInVariants}
+              whileHover={{ scale: 1.1 }}
+              transition={{ duration: 0.3 }}
             />
 
             <span className="text-lg">Ruben Alfonso</span>
           </div>
-        </div>
+          {sendTime && (
+            <>
+              <span className="mx-2">•</span>
+              <span>{sendTime}</span>
+            </>
+          )}
+          <motion.button
+            onClick={() => setIsShareModalOpen(true)}
+            className="cursor-pointer flex items-center space-x-2 px-4 py-2 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-gray-300 transition-all duration-200"
+            variants={hoverVariants}
+            whileHover={{
+              scale: 1.02,
+              transition: { duration: 0.2 }
+            }}
+            whileTap={{
+              scale: 0.98,
+              transition: { duration: 0.1 }
+            }}
+          >
+            <ShareIcon className="w-4 h-4" />
+            <span className="font-medium text-sm">Compartir</span>
+          </motion.button>
+        </motion.div>
 
         {/* Imagen principal */}
-         {mainImage && (
-           <div className="mb-8 text-center">
-             <img
-               src={campaign?.images?.length > 1 ? campaign.images[2].url : campaign.images[1].url}
-               alt={mainImage.alt || campaignTitle}
-               className="w-full h-auto rounded-lg shadow-lg max-h object-cover mx-auto"
-               onError={(e) => {
-                 e.target.style.display = 'none';
-               }}
-             />
-           </div>
-         )}
+        {mainImage && (
+          <div className="mb-8 text-center">
+            <img
+              src={campaign?.images?.length > 1 ? campaign.images[2].url : campaign.images[1].url}
+              alt={mainImage.alt || campaignTitle}
+              className="w-full h-auto rounded-lg shadow-lg max-h object-cover mx-auto"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
 
         {/* Contenido del artículo */}
         <div className="max-w-4xl mx-auto text-lg leading-relaxed">
@@ -146,8 +178,8 @@ const CampaignDetailPage = () => {
               {campaignDescriptions
                 .filter((description) => {
                   const text = typeof description === 'string' ? description : description.text || '';
-                  return !text.toLowerCase().includes('view email in browser') && 
-                         !text.toLowerCase().includes('update your preferences');
+                  return !text.toLowerCase().includes('view email in browser') &&
+                    !text.toLowerCase().includes('update your preferences');
                 })
                 .map((description, index) => (
                   <div key={index} className="mb-6">
@@ -181,24 +213,31 @@ const CampaignDetailPage = () => {
           )}
 
           {/* Galería de imágenes adicionales */}
-           {campaignImages.length > 1 && (
-             <div className="mt-12">
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-                 {campaignImages.slice(1).map((image, index) => (
-                   <div key={index} className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 hover:-translate-y-1 transform transition-transform">
-                     <img
-                       src={image.url}
-                       alt={image.alt || `Imagen ${index + 2}`}
-                       className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
-                       onError={(e) => {
-                         e.target.style.display = 'none';
-                       }}
-                     />
-                   </div>
-                 ))}
-               </div>
-             </div>
-           )}
+          {campaignImages.length > 1 && (
+            <div className="mt-12">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                {campaignImages.slice(1).map((image, index) => (
+                  <div key={index} className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 hover:-translate-y-1 transform transition-transform">
+                    <img
+                      src={image.url}
+                      alt={image.alt || `Imagen ${index + 2}`}
+                      className="w-full h-64 object-cover hover:scale-105 transition-transform duration-300"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Share Modal */}
+          <ShareModal
+            isOpen={isShareModalOpen}
+            onClose={() => setIsShareModalOpen(false)}
+            title={campaignTitle}
+            url={window.location.href}
+          />
         </div>
       </main>
     </div>
