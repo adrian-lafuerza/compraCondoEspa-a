@@ -40,6 +40,7 @@ const PropertiesPage = () => {
     maxSize: '',
     rooms: '',
     bathrooms: '',
+    operationType: '',
     sortByPrice: ''
   });
 
@@ -170,6 +171,23 @@ const PropertiesPage = () => {
       // Filtro por número de baños
       if (filters.bathrooms && filters.bathrooms !== '' && property.features.bathroomNumber !== parseInt(filters.bathrooms)) {
         return false;
+      }
+
+      // Filtro por tipo de operación
+      if (filters.operationType && filters.operationType !== '') {
+        // Normalizar el tipo de operación de la propiedad
+        const normalizeOperationType = (type) => {
+          if (!type) return 'sell';
+          const normalizedType = type.toLowerCase();
+          if (normalizedType === 'venta' || normalizedType === 'sale') return 'sell';
+          if (normalizedType === 'alquiler') return 'rent';
+          return normalizedType;
+        };
+        
+        const propertyOperationType = normalizeOperationType(property.operation?.type);
+        if (propertyOperationType !== filters.operationType) {
+          return false;
+        }
       }
 
       return true;
@@ -308,6 +326,7 @@ const PropertiesPage = () => {
       maxSize: '',
       rooms: '',
       bathrooms: '',
+      operationType: '',
       sortByPrice: ''
     });
     // Los filtros se limpiarán automáticamente por el useEffect

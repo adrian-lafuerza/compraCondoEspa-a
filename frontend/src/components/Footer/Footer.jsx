@@ -96,7 +96,7 @@ const Footer = () => {
 
     const socialLinks = [
         {
-            href: "https://www.facebook.com/wwwrubenalfonsocom/?_rdr",
+            href: "https://www.facebook.com/rubenalfonsogroup",
             icon: FacebookIcon,
             label: "Síguenos en Facebook - Rubén Alfonso Real Estate",
             title: "Facebook - Propiedades en Miami y España",
@@ -110,7 +110,7 @@ const Footer = () => {
             alt: "X - Comprando con España"
         },
         {
-            href: "https://www.instagram.com/comprandoconespana/",
+            href: "https://www.instagram.com/rubenalfonsorealtor/",
             icon: InstagramIcon,
             label: "Síguenos en Instagram - Comprando con España",
             title: "Instagram - Inversiones inmobiliarias Miami-España",
@@ -131,7 +131,7 @@ const Footer = () => {
             alt: "LinkedIn - Rubén Alfonso"
         },
         {
-            href: "https://wa.me/17862282670",
+            href: "https://wa.me/+17862823870",
             icon: WhatsappIcon,
             label: "Conéctate en WhatsApp - Rubén Alfonso",
             title: "WhatsApp - Inversiones inmobiliarias Miami-España",
@@ -153,13 +153,13 @@ const Footer = () => {
                 className="relative z-10 w-full px-4 sm:px-6 lg:px-12 xl:px-24 py-8 lg:py-12"
                 variants={containerVariants}
             >
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 sm:gap-8 lg:gap-16">
+                <div className="flex flex-col lg:flex-row justify-between items-center lg:items-end lg:items-end gap-6 sm:gap-8 lg:gap-16">
                     {/* Contenido Principal del Footer */}
-                    <div className="flex-shrink-0 flex flex-col justify-between h-full w-full lg:w-auto">
+                    <div className="flex-shrink-0 flex flex-col items-center lg:items-start justify-between h-full w-full lg:w-auto">
                         {/* Logos de la Empresa */}
                         <motion.div
                             ref={logoRef}
-                            className="flex flex-col sm:flex-row items-start sm:items-end gap-3 sm:gap-4 mb-6 lg:mb-8"
+                            className="flex flex-col sm:flex-row items-center md:items-start gap-3 mb-6 lg:mb-8"
                             initial="hidden"
                             animate={logoInView ? "visible" : "hidden"}
                             variants={containerVariants}
@@ -204,7 +204,7 @@ const Footer = () => {
                             animate={socialInView ? "visible" : "hidden"}
                             variants={containerVariants}
                         >
-                            <h3 className="text-sm font-medium text-gray-600 sr-only">Síguenos en redes sociales</h3>
+                            <h3 className="text-lg font-medium text-gray-600 sr-only">Síguenos en redes sociales</h3>
                             <motion.div
                                 className="flex flex-wrap gap-2 sm:gap-3 md:gap-4"
                                 variants={containerVariants}
@@ -216,7 +216,7 @@ const Footer = () => {
                                         title={social.title}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="group bg-black text-white p-2 sm:p-3 md:p-4 rounded-xl hover:bg-white hover:text-black transition-all duration-300 transform hover:shadow-xl hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                                        className="group bg-black text-white p-3 sm:p-3 md:p-4 rounded-xl hover:bg-white hover:text-black transition-all duration-300 transform hover:shadow-xl hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                                         aria-label={social.label}
                                         variants={socialIconVariants}
                                         custom={index}
@@ -269,16 +269,16 @@ const Footer = () => {
                                     boxShadow: "20px 20px 40px rgba(0,0,0,0.3)",
                                 }}
                                 animate={{
-                                     y: [0, -15, 0],
-                                     rotateX: [0, 8, 0],
-                                     rotateY: [0, -5, 0],
-                                     scale: [1, 1.02, 1],
-                                     transition: {
-                                         duration: 2.8,
-                                         repeat: Infinity,
-                                         ease: "easeInOut"
-                                     }
-                                 }}
+                                    y: [0, -15, 0],
+                                    rotateX: [0, 8, 0],
+                                    rotateY: [0, -5, 0],
+                                    scale: [1, 1.02, 1],
+                                    transition: {
+                                        duration: 2.8,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                    }
+                                }}
                                 whileHover={{
                                     scale: 1.08,
                                     y: -12,

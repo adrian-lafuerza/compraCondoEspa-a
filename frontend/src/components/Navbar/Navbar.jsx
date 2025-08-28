@@ -232,7 +232,7 @@ export const Navbar = () => {
                         >
                             {[
                                 {
-                                    href: "https://www.facebook.com/wwwrubenalfonsocom/?_rdr",
+                                    href: "https://www.facebook.com/rubenalfonsogroup",
                                     icon: FacebookIcon,
                                     label: "Síguenos en Facebook - Rubén Alfonso Real Estate",
                                     title: "Facebook - Propiedades en Miami y España",
@@ -246,7 +246,7 @@ export const Navbar = () => {
                                     alt: "X - Comprando con España"
                                 },
                                 {
-                                    href: "https://www.instagram.com/comprandoconespana/",
+                                    href: "https://www.instagram.com/rubenalfonsorealtor/",
                                     icon: InstagramIcon,
                                     label: "Síguenos en Instagram - Comprando con España",
                                     title: "Instagram - Inversiones inmobiliarias Miami-España",
@@ -265,9 +265,9 @@ export const Navbar = () => {
                                     label: "Conéctate en LinkedIn - Rubén Alfonso",
                                     title: "LinkedIn - Perfil profesional inmobiliario",
                                     alt: "LinkedIn - Rubén Alfonso"
-                                }, 
+                                },
                                 {
-                                    href: "https://wa.me/17862282670",
+                                    href: "https://wa.me/+17862823870",
                                     icon: WhatsappIcon,
                                     label: "Conéctate en WhatsApp - Rubén Alfonso",
                                     title: "WhatsApp - Inversiones inmobiliarias Miami-España",
@@ -325,7 +325,7 @@ export const Navbar = () => {
                             >
                                 Miami:
                                 <motion.a
-                                    href="tel:+17862282670"
+                                    href="tel:+17862823870"
                                     className="hover:text-gray-300 transition-colors"
                                     aria-label="Llamar a oficina de Miami"
                                     title="Contacto directo Miami - Rubén Alfonso"
@@ -334,7 +334,7 @@ export const Navbar = () => {
                                         transition: { duration: 0.2 }
                                     }}
                                 >
-                                    +1 (786) 228-2670
+                                    +1 (786) 282-3870
                                 </motion.a>
                             </motion.span>
                             <motion.a
@@ -407,11 +407,11 @@ export const Navbar = () => {
                                 >
                                     {[
                                         {
-                                            href: "https://www.facebook.com/wwwrubenalfonsocom/?_rdr",
+                                            href: "https://www.facebook.com/rubenalfonsogroup",
                                             icon: FacebookIcon,
-                                            label: "Facebook - Rubén Alfonso Real Estate",
-                                            title: "Síguenos en Facebook",
-                                            alt: "Facebook"
+                                            label: "Síguenos en Facebook - Rubén Alfonso Real Estate",
+                                            title: "Facebook - Propiedades en Miami y España",
+                                            alt: "Facebook - Rubén Alfonso Real Estate"
                                         },
                                         {
                                             href: "https://x.com/RUBENALFONSOG",
@@ -421,11 +421,11 @@ export const Navbar = () => {
                                             alt: "X - Comprando con España"
                                         },
                                         {
-                                            href: "https://www.instagram.com/comprandoconespana/",
+                                            href: "https://www.instagram.com/rubenalfonsorealtor/",
                                             icon: InstagramIcon,
-                                            label: "Instagram - Comprando con España",
-                                            title: "Síguenos en Instagram",
-                                            alt: "Instagram"
+                                            label: "Síguenos en Instagram - Comprando con España",
+                                            title: "Instagram - Inversiones inmobiliarias Miami-España",
+                                            alt: "Instagram - Comprando con España"
                                         },
                                         {
                                             href: "https://www.youtube.com/@RUBENALFONSOREALTOR",
@@ -437,17 +437,17 @@ export const Navbar = () => {
                                         {
                                             href: "https://www.linkedin.com/in/ruben-alfonso-7143334/",
                                             icon: LinkedInIcon,
-                                            label: "LinkedIn - Rubén Alfonso",
-                                            title: "Conéctate en LinkedIn",
-                                            alt: "LinkedIn"
+                                            label: "Conéctate en LinkedIn - Rubén Alfonso",
+                                            title: "LinkedIn - Perfil profesional inmobiliario",
+                                            alt: "LinkedIn - Rubén Alfonso"
                                         },
                                         {
-                                            href: "https://wa.me/17862282670",
+                                            href: "https://wa.me/+17862823870",
                                             icon: WhatsappIcon,
                                             label: "Conéctate en WhatsApp - Rubén Alfonso",
                                             title: "WhatsApp - Inversiones inmobiliarias Miami-España",
                                             alt: "WhatsApp - Comprando con España"
-                                        }
+                                        },
                                     ].map((social, index) => (
                                         <motion.a
                                             key={social.href}
@@ -497,7 +497,7 @@ export const Navbar = () => {
                                     >
                                         Miami:
                                         <motion.a
-                                            href="tel:+17862282670"
+                                            href="tel:+17862823870"
                                             className="hover:text-gray-300 transition-colors duration-200"
                                             aria-label="Llamar a oficina de Miami"
                                             title="Contacto directo Miami"
@@ -505,7 +505,7 @@ export const Navbar = () => {
                                                 transition: { duration: 0.2 }
                                             }}
                                         >
-                                            +1 (786) 228-2670
+                                            +1 (786) 282-3870
                                         </motion.a>
                                     </motion.div>
                                     <motion.div
@@ -535,13 +535,11 @@ export const Navbar = () => {
                                     variants={mobileItemVariants}
                                 >
                                     {[
-                                        { href: 'https://www.compracondomiami.com/', label: "Miami", ariaLabel: "Servicios inmobiliarios en Miami", title: "Propiedades en Miami" }
+                                        { href: "https://www.compracondomiami.com/", label: "Miami", ariaLabel: "Servicios inmobiliarios en Miami", title: "Propiedades en Miami" }
                                     ].map((location) => (
                                         <motion.a
                                             key={location.href}
                                             href={location.href}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
                                             className="hover:text-gray-300 transition-colors duration-200"
                                             aria-label={location.ariaLabel}
                                             title={location.title}

@@ -157,6 +157,20 @@ const FilterSidebar = ({ localFilters, handleFilterChange, handleClearFilters })
         </select>
       </div>
 
+      {/* Tipo de Operación */}
+      <div className="mb-4 lg:mb-6">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Operación</label>
+        <select
+          value={localFilters.operationType || ''}
+          onChange={(e) => handleFilterChange('operationType', e.target.value)}
+          className="w-full p-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+        >
+          <option value="">Cualquiera</option>
+          <option value="sell">Venta</option>
+          <option value="rent">Alquiler</option>
+        </select>
+      </div>
+
       {/* Ordenamiento por precio */}
       <div className="mb-4 lg:mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">Ordenar por precio</label>
