@@ -84,7 +84,7 @@ export const PropertiesSection = () => {
     };
     return (
         <section id="properties-section" className="bg-white py-8 md:py-16 px-4 md:px-8">
-            <div className="max-w-[85%] mx-auto">
+            <div className="max-w-[95%] md:max-w-[95%] lg:max-w-[85%] mx-auto">
                 {/* Header */}
                 <div ref={sectionRef} className="text-center py-6 md:py-12 w-[85%] scroll-reveal mx-auto">
                     <div className="flex items-center justify-center mb-4 md:mb-6">
@@ -110,12 +110,12 @@ export const PropertiesSection = () => {
                                 className="w-full object-cover image-hover-smooth"
                             />
                         </div>
-                        <div className="px-4 md:px-6 py-6 md:py-8 bg-white">
-                            <span className="text-gray-400 mb-2 text-sm">Obra nueva</span>
-                            <h3 className="text-gray-900 text-base md:text-lg font-semibold mb-4">Madrid – Lujo urbano y conexiones globales</h3>
+                        <div className="px-8 md:px-4 md:px-6 py-6 md:py-8 bg-white">
+                            <span className="text-gray-400 mb-2 text-lg md:text-sm">Obra nueva</span>
+                            <h3 className="text-gray-900 text-lg md:text-lg font-semibold mb-4">Madrid – Lujo urbano y conexiones globales</h3>
                             <button
                                 onClick={handleViewMadridProperties}
-                                className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-xs md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
+                                className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-md md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
                             >
                                 <span className="truncate">Ver Propiedades</span>
                                 <span className="ml-2">→</span>
@@ -133,12 +133,12 @@ export const PropertiesSection = () => {
                                 className="w-full object-cover image-hover-smooth"
                             />
                         </div>
-                        <div className="px-4 md:px-6 py-6 md:py-8 bg-white">
-                            <span className="text-gray-400 mb-2 text-sm">Obra nueva</span>
-                            <h3 className="text-gray-900 text-base md:text-lg font-semibold mb-4">Costa del Sol – Vida premium frente al mar</h3>
+                        <div className="px-8 md:px-4 md:px-6 py-6 md:py-8 bg-white">
+                            <span className="text-gray-400 text-lg md:text-sm">Obra nueva</span>
+                            <h3 className="text-gray-900 text-lg md:text-lg font-semibold mb-4">Costa del Sol – Vida premium frente al mar</h3>
                             <button
                                 onClick={handleViewCostaDelSolProperties}
-                                className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-xs md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
+                                className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-md md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
                             >
                                 <span className="truncate">Ver Propiedades</span>
                                 <span className="ml-2">→</span>
@@ -156,12 +156,12 @@ export const PropertiesSection = () => {
                                 className="w-full object-cover image-hover-smooth"
                             />
                         </div>
-                        <div className="px-4 md:px-6 py-6 md:py-8 bg-white">
-                            <span className="text-gray-400 mb-2 text-sm">Obra nueva</span>
-                            <h3 className="text-gray-900 text-base md:text-lg font-semibold mb-4">Costa Blanca – Tranquilidad mediterránea</h3>
+                        <div className="px-8 md:px-4 md:px-6 py-6 md:py-8 bg-white">
+                            <span className="text-gray-400 mb-2 text-lg md:text-sm">Obra nueva</span>
+                            <h3 className="text-gray-900 text-lg md:text-lg font-semibold mb-4">Costa Blanca – Tranquilidad mediterránea</h3>
                             <button
                                 onClick={handleViewCostaBlancaProperties}
-                                className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-xs md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
+                                className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-md md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
                             >
                                 <span className="truncate">Ver Propiedades</span>
                                 <span className="ml-2">→</span>
@@ -179,12 +179,12 @@ export const PropertiesSection = () => {
                                 className="w-full object-cover image-hover-smooth"
                             />
                         </div>
-                        <div className="px-4 md:px-6 py-6 md:py-8 bg-white">
-                            <span className="text-gray-400 mb-2 text-sm">Inversión</span>
-                            <h3 className="text-gray-900 text-base md:text-lg font-semibold mb-4">Oportunidades de Inversión – Rentabilidad garantizada</h3>
+                        <div className="px-8 md:px-4 md:px-6 py-6 md:py-8 bg-white">
+                            <span className="text-gray-400 mb-2 text-lg md:text-sm">Inversión</span>
+                            <h3 className="text-gray-900 text-lg md:text-lg font-semibold mb-4">Oportunidades de Inversión – Rentabilidad garantizada</h3>
                             <button
                                 onClick={handleViewInvestmentOpportunities}
-                                className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-xs md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
+                                className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-md md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
                             >
                                 <span className="truncate">Ver Propiedades</span>
                                 <span className="ml-2">→</span>
@@ -202,12 +202,12 @@ export const PropertiesSection = () => {
                                 className="w-full object-cover image-hover-smooth"
                             />
                         </div>
-                        <div className="px-4 md:px-6 py-6 md:py-8 bg-white">
-                            <span className="text-gray-400 mb-2 text-sm">Preconstrucción</span>
-                            <h3 className="text-gray-900 text-base md:text-lg font-semibold mb-4">Preconstrucción – Proyectos exclusivos</h3>
+                        <div className="px-8 md:px-4 md:px-6 py-6 md:py-8 bg-white">
+                            <span className="text-gray-400 mb-2 text-lg md:text-sm">Preconstrucción</span>
+                            <h3 className="text-gray-900 text-lg md:text-lg font-semibold mb-4">Preconstrucción – Proyectos exclusivos</h3>
                             <button
                                 onClick={handleViewPreconstruction}
-                                className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-xs md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
+                                className="cursor-pointer border border-[#0E0E0E] text-[#0E0E0E] font-bold px-4 md:px-6 py-2 rounded text-md md:text-sm hover:bg-[#0E0E0E] hover:text-white transition-colors flex items-center w-full md:w-auto justify-center md:justify-start"
                             >
                                 <span className="truncate">Ver Propiedades</span>
                                 <span className="ml-2">→</span>

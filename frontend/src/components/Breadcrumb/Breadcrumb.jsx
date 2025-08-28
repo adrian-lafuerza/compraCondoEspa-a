@@ -59,7 +59,7 @@ const Breadcrumb = ({ customItems = [] }) => {
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
-      <div className="md:max-w-[70%] sm:max-w-[100%] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className={` ${location.pathname === '/properties' ? 'md:max-w-[90%] px-4 sm:px-6 lg:px-8' : 'md:max-w-[100%]'} sm:max-w-[100%] mx-auto py-4 `}>
         <ol className="flex items-center space-x-2 text-sm">
           {breadcrumbs.map((breadcrumb, index) => {
             const isLast = index === breadcrumbs.length - 1;

@@ -112,7 +112,6 @@ module.exports = async (req, res) => {
 
     // Crear parámetros de búsqueda para el caché
     const searchParams = {
-      status: status || 'all',
       type: type || 'all',
       count: parseInt(count),
       offset: parseInt(offset),
@@ -135,9 +134,6 @@ module.exports = async (req, res) => {
     });
 
     // Agregar filtros opcionales
-    if (status) {
-      params.append('status', status);
-    }
     if (type) {
       params.append('type', type);
     }
