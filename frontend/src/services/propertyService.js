@@ -1001,19 +1001,57 @@ export const propertyService = {
    */
   async getPropertiesByNewPropertyAndLocation(newProperty, location) {
     try {
-
-      const url = `${API_BASE_URL}/contentful/properties/newproperty/${encodeURIComponent(newProperty)}/location/${encodeURIComponent(location)}`;
-
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      // Primero obtener todas las propiedades por newProperty
+      const newPropertyData = await this.getPropertiesByNewProperty(newProperty);
+      
+      if (!newPropertyData || !newPropertyData.success || !newPropertyData.data || !newPropertyData.data.properties) {
+        return {
+          success: false,
+          data: { properties: [] },
+          message: 'No se pudieron obtener propiedades'
+        };
       }
 
-      const data = await response.json();
+      // Mapear location a los valores exactos de Contentful
+      const locationMapping = {
+        'costa-blanca': 'Costa Blanca',
+        'costa-del-sol': 'Costa del Sol',
+        'madrid': 'Madrid',
+        'barcelona': 'Barcelona'
+      };
 
+      const mappedLocation = locationMapping[location.toLowerCase()];
       
-      return data;
+      if (!mappedLocation) {
+        console.warn(`Location '${location}' no reconocida, devolviendo todas las propiedades`);
+        return newPropertyData;
+      }
+
+      // Filtrar propiedades por location usando coincidencia exacta con propertyZone
+      const filteredProperties = newPropertyData.data.properties.filter(property => {
+        const propertyZone = property.propertyZone || '';
+        const propertyAddress = property.address?.streetName || '';
+        
+        // Buscar coincidencias exactas en zona o parciales en dirección
+        return propertyZone === mappedLocation ||
+               propertyZone.toLowerCase().includes(mappedLocation.toLowerCase()) ||
+               propertyAddress.toLowerCase().includes(mappedLocation.toLowerCase());
+      });
+
+      console.log(`Propiedades filtradas para ${newProperty} en ${location}:`, filteredProperties.length);
+
+      return {
+        success: true,
+        data: {
+          properties: filteredProperties,
+          total: filteredProperties.length,
+          filters: {
+            newProperty: newProperty,
+            location: mappedLocation
+          }
+        },
+        message: `Se obtuvieron ${filteredProperties.length} propiedades para ${newProperty} en ${location}`
+      };
 
     } catch (error) {
       console.error('Error fetching properties by newProperty and location:', error);
