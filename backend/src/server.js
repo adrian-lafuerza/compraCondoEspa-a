@@ -10,12 +10,13 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Permitir requests sin origin (mobile apps, etc.)
     if (!origin) return callback(null, true);
-    
+
     const allowedOrigins = [
       'http://localhost:5173', // Desarrollo local
       'http://localhost:5175', // Desarrollo local Vite
       'http://localhost:3000', // Desarrollo local alternativo
       process.env.FRONTEND_URL, // URL de producción del frontend
+      process.env.FRONTEND_URL_VITE, // URL de producción del frontend Vite
       ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
     ].filter(Boolean);
 
