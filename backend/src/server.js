@@ -18,11 +18,16 @@ const corsOptions = {
       'https://localhost:5173', // Desarrollo local HTTPS
       process.env.FRONTEND_URL, // URL de producción del frontend
       process.env.FRONTEND_URL_VITE, // URL de producción del frontend Vite
+      'https://compra-condo-espa-a.vercel.app', // URL de producción específica
+      'https://compra-condo-espa-a-git-main-adrians-projects-6ba05f8b.vercel.app', // URL de preview
       ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
     ].filter(Boolean);
 
-    console.log('Origin:', origin);
-    console.log('Allowed origins:', allowedOrigins);
+    // En desarrollo, mostrar logs
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Origin:', origin);
+      console.log('Allowed origins:', allowedOrigins);
+    }
 
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
@@ -31,8 +36,13 @@ const corsOptions = {
       if (process.env.NODE_ENV !== 'production' && origin && origin.includes('localhost')) {
         callback(null, true);
       } else {
-        console.log('CORS blocked origin:', origin);
-        callback(new Error('No permitido por CORS'));
+        // En producción, permitir dominios de Vercel
+        if (origin && (origin.includes('.vercel.app') || origin.includes('localhost'))) {
+          callback(null, true);
+        } else {
+          console.log('CORS blocked origin:', origin);
+          callback(new Error('No permitido por CORS'));
+        }
       }
     }
   },
@@ -47,10 +57,19 @@ app.use(cors(corsOptions));
 
 // Middleware adicional para manejar preflight requests
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin);
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization');
+  // Solo agregar headers si no están ya presentes (para evitar conflictos con Vercel)
+  if (!res.getHeader('Access-Control-Allow-Origin')) {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  }
+  if (!res.getHeader('Access-Control-Allow-Credentials')) {
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+  if (!res.getHeader('Access-Control-Allow-Methods')) {
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  }
+  if (!res.getHeader('Access-Control-Allow-Headers')) {
+    res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization');
+  }
   
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
