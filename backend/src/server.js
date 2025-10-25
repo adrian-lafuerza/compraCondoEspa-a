@@ -5,78 +5,13 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuración de CORS para producción
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Permitir requests sin origin (mobile apps, etc.)
-    if (!origin) return callback(null, true);
-
-    const allowedOrigins = [
-      'http://localhost:5173', // Desarrollo local
-      'http://localhost:5175', // Desarrollo local Vite
-      'http://localhost:3000', // Desarrollo local alternativo
-      'https://localhost:5173', // Desarrollo local HTTPS
-      process.env.FRONTEND_URL, // URL de producción del frontend
-      process.env.FRONTEND_URL_VITE, // URL de producción del frontend Vite
-      'https://compra-condo-espa-a.vercel.app', // URL de producción específica
-      'https://compra-condo-espa-a-git-main-adrians-projects-6ba05f8b.vercel.app', // URL de preview
-      ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
-    ].filter(Boolean);
-
-    // En desarrollo, mostrar logs
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('Origin:', origin);
-      console.log('Allowed origins:', allowedOrigins);
-    }
-
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      // En desarrollo, permitir cualquier localhost
-      if (process.env.NODE_ENV !== 'production' && origin && origin.includes('localhost')) {
-        callback(null, true);
-      } else {
-        // En producción, permitir dominios de Vercel
-        if (origin && (origin.includes('.vercel.app') || origin.includes('localhost'))) {
-          callback(null, true);
-        } else {
-          console.log('CORS blocked origin:', origin);
-          callback(new Error('No permitido por CORS'));
-        }
-      }
-    }
-  },
-  credentials: true,
+// Configuración básica de CORS
+app.use(cors({
+  origin: true, // Permite todos los orígenes
+  credentials: true, // Permite cookies y credenciales
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  optionsSuccessStatus: 200 // Para soportar navegadores legacy
-};
-
-// Middlewares
-app.use(cors(corsOptions));
-
-// Middleware adicional para manejar preflight requests
-app.use((req, res, next) => {
-  // Solo agregar headers si no están ya presentes (para evitar conflictos con Vercel)
-  if (!res.getHeader('Access-Control-Allow-Origin')) {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  }
-  if (!res.getHeader('Access-Control-Allow-Credentials')) {
-    res.header('Access-Control-Allow-Credentials', 'true');
-  }
-  if (!res.getHeader('Access-Control-Allow-Methods')) {
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  }
-  if (!res.getHeader('Access-Control-Allow-Headers')) {
-    res.header('Access-Control-Allow-Headers', 'Origin,X-Requested-With,Content-Type,Accept,Authorization');
-  }
-  
-  if (req.method === 'OPTIONS') {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
