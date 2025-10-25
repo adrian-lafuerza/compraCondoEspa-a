@@ -1,27 +1,15 @@
 const axios = require('axios');
+const { handleCors } = require('../../src/utils/corsHandler');
 
 // Configuración de Contentful
 const CONTENTFUL_SPACE_ID = process.env.CONTENTFUL_SPACE_ID;
 const CONTENTFUL_ACCESS_TOKEN = process.env.CONTENTFUL_ACCESS_TOKEN;
 const CONTENTFUL_BASE_URL = `https://cdn.contentful.com/spaces/${CONTENTFUL_SPACE_ID}`;
 
-// Configurar CORS
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Credentials': 'true'
-};
-
 module.exports = async (req, res) => {
-  // Configurar CORS headers
-  Object.keys(corsHeaders).forEach(key => {
-    res.setHeader(key, corsHeaders[key]);
-  });
-
-  // Manejar preflight OPTIONS request
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  // Manejar CORS
+  if (!handleCors(req, res)) {
+    return; // Ya respondió o bloqueó la request
   }
 
   // Solo permitir GET requests

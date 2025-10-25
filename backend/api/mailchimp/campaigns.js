@@ -1,19 +1,12 @@
 const axios = require('axios');
 const { mailchimpCacheManager } = require('../../src/utils/mailchimpCacheManager');
+const { handleCors } = require('../../src/utils/corsHandler');
 
 // Configuración de Mailchimp
 const MAILCHIMP_API_KEY = process.env.MAILCHIMP_API_KEY;
 const MAILCHIMP_SERVER_PREFIX = process.env.MAILCHIMP_SERVER_PREFIX;
 const MAILCHIMP_LIST_ID = process.env.MAILCHIMP_LIST_ID;
 const MAILCHIMP_BASE_URL = `https://${MAILCHIMP_SERVER_PREFIX}.api.mailchimp.com/3.0`;
-
-// Headers CORS
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Credentials': 'true'
-};
 
 // Helper function to extract all images and descriptions from HTML content
 const extractImagesAndDescriptions = (htmlContent) => {
@@ -78,14 +71,9 @@ const extractImagesAndDescriptions = (htmlContent) => {
 
 module.exports = async (req, res) => {
   try {
-    // Establecer headers CORS
-    Object.keys(corsHeaders).forEach(key => {
-      res.setHeader(key, corsHeaders[key]);
-    });
-    
-    // Manejar preflight OPTIONS request
-    if (req.method === 'OPTIONS') {
-      return res.status(200).end();
+    // Manejar CORS
+    if (!handleCors(req, res)) {
+      return; // Ya respondió o bloqueó la request
     }
 
     // Solo permitir GET requests
