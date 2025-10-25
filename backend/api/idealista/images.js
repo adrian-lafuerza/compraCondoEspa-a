@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cacheManager = require('../../src/utils/cacheManager');
+const { handleCors } = require('../../src/utils/corsHandler');
 
 // Función para obtener token de acceso
 const getAccessToken = async () => {
@@ -105,14 +106,9 @@ const getPropertyImagesWithCache = async (propertyId) => {
 };
 
 module.exports = async (req, res) => {
-    // Configurar CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    if (req.method === 'OPTIONS') {
-        res.status(200).end();
-        return;
+    // Manejar CORS
+    if (!handleCors(req, res)) {
+        return; // Ya respondió o bloqueó la request
     }
 
     if (req.method !== 'GET') {

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba CORS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prueba de Configuración CORS</h1>
+    <p>Esta página prueba si la configuración CORS está funcionando correctamente.</p>
+    
+    <div>
+        <button onclick="testCors()">Probar CORS - Stories</button>
+        <button onclick="testCorsProperties()">Probar CORS - Properties</button>
+        <button onclick="testCorsCampaigns()">Probar CORS - Campaigns</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE = 'https://compra-condo-espa-a-backend-git-main-adrians-projects-6ba05f8b.vercel.app';
+        
+        function addResult(message, isSuccess) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${isSuccess ? 'success' : 'error'}`;
+            resultDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            resultsDiv.appendChild(resultDiv);
+        }
+        
+        async function testCors() {
+            try {
+                addResult('Iniciando prueba CORS para /api/contentful/stories...', true);
+                
+                const response = await fetch(`${API_BASE}/api/contentful/stories`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ CORS funcionando correctamente para stories. Status: ${response.status}`, true);
+                    addResult(`Datos recibidos: ${data.stories ? data.stories.length : 0} stories`, true);
+                } else {
+                    addResult(`❌ Error en response: ${response.status} - ${response.statusText}`, false);
+                }
+            } catch (error) {
+                addResult(`❌ Error CORS en stories: ${error.message}`, false);
+            }
+        }
+        
+        async function testCorsProperties() {
+            try {
+                addResult('Iniciando prueba CORS para /api/contentful/properties...', true);
+                
+                const response = await fetch(`${API_BASE}/api/contentful/properties`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ CORS funcionando correctamente para properties. Status: ${response.status}`, true);
+                    addResult(`Datos recibidos: ${data.properties ? data.properties.length : 0} properties`, true);
+                } else {
+                    addResult(`❌ Error en response: ${response.status} - ${response.statusText}`, false);
+                }
+            } catch (error) {
+                addResult(`❌ Error CORS en properties: ${error.message}`, false);
+            }
+        }
+        
+        async function testCorsCampaigns() {
+            try {
+                addResult('Iniciando prueba CORS para /api/mailchimp/campaigns...', true);
+                
+                const response = await fetch(`${API_BASE}/api/mailchimp/campaigns`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    addResult(`✅ CORS funcionando correctamente para campaigns. Status: ${response.status}`, true);
+                    addResult(`Datos recibidos: ${data.campaigns ? data.campaigns.length : 0} campaigns`, true);
+                } else {
+                    addResult(`❌ Error en response: ${response.status} - ${response.statusText}`, false);
+                }
+            } catch (error) {
+                addResult(`❌ Error CORS en campaigns: ${error.message}`, false);
+            }
+        }
+        
+        // Información del origen actual
+        addResult(`Origen actual: ${window.location.origin}`, true);
+        addResult(`User Agent: ${navigator.userAgent}`, true);
+    </script>
+</body>
+</html>

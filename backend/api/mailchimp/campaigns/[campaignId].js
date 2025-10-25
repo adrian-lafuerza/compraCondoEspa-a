@@ -1,3 +1,6 @@
+const axios = require('axios');
+const { handleCors } = require('../../../src/utils/corsHandler');
+
 // Helper function to extract all images and descriptions from HTML content
 const extractImagesAndDescriptions = (htmlContent) => {
   if (!htmlContent) return { images: [], descriptions: [] };
@@ -61,14 +64,9 @@ const extractImagesAndDescriptions = (htmlContent) => {
 
 
 module.exports = async (req, res) => {
-  // Headers CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  // Manejar preflight OPTIONS request
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  // Manejar CORS
+  if (!handleCors(req, res)) {
+    return; // Ya respondió o bloqueó la request
   }
 
   // Solo permitir GET requests

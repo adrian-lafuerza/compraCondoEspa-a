@@ -1,6 +1,7 @@
 const axios = require('axios');
+const { handleCors } = require('../../../../src/utils/corsHandler');
 
-// Función para normalizar tipos de operación
+// Función para normalizar el tipo de operación
 const normalizeOperationType = (operationType) => {
   if (!operationType) return 'sell';
   
@@ -28,24 +29,10 @@ if (!CONTENTFUL_SPACE_ID || !CONTENTFUL_ACCESS_TOKEN) {
   console.error('❌ ERROR: Debes configurar CONTENTFUL_SPACE_ID y CONTENTFUL_ACCESS_TOKEN en .env');
 }
 
-// Configurar CORS
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Credentials': 'true'
-};
-
 module.exports = async function handler(req, res) {
-  // Configurar CORS headers
-  Object.keys(corsHeaders).forEach(key => {
-    res.setHeader(key, corsHeaders[key]);
-  });
-  
-  // Manejar preflight OPTIONS request
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+  // Manejar CORS
+  if (!handleCors(req, res)) {
+    return; // Ya respondió o bloqueó la request
   }
 
   // Solo permitir GET requests
