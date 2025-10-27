@@ -306,23 +306,37 @@ class IdealistaFtpService {
      */
     async getProperties(options = {}) {
         try {
-            // Si no tenemos archivo local, intentar descargar
+            // Verificar si tenemos datos en caché y son recientes (30 minutos)
+            if (this.propertiesCache && this.cacheTimestamp && 
+                (Date.now() - this.cacheTimestamp) < 30 * 60 * 1000) {
+                console.log('📋 Usando datos desde caché (válido por 30 min)');
+                
+                // Aplicar filtros si se proporcionan
+                let cachedData = this.propertiesCache;
+                if (options && Object.keys(options).length > 0) {
+                    cachedData = this.parser.applyFilters(cachedData, options);
+                }
+                return cachedData;
+            }
+
+            // Si no tenemos archivo local, intentar usar archivos existentes primero
             if (!this.currentDataFile) {
-                try {
-                    await this.downloadLatestFile();
-                } catch (downloadError) {
-                    console.error('❌ Error descargando archivo:', downloadError.message);
-                    // Si falla la descarga pero tenemos archivos locales, usar el más reciente
-                    await this.initializeCurrentFile();
+                console.log('🔍 Buscando archivos locales existentes...');
+                await this.initializeCurrentFile();
+                
+                // Solo descargar si no hay archivos locales
+                if (!this.currentDataFile) {
+                    console.log('📥 No hay archivos locales, descargando desde FTP...');
+                    try {
+                        await this.downloadLatestFile();
+                    } catch (downloadError) {
+                        console.error('❌ Error descargando archivo:', downloadError.message);
+                        throw new Error('No se pudo descargar archivo y no hay archivos locales disponibles');
+                    }
                 }
             }
 
-            // Verificar si tenemos datos en caché y son recientes
-            // Temporalmente deshabilitado para forzar reprocesamiento después de corrección de precios
-            if (false && this.propertiesCache && this.cacheTimestamp && 
-                (Date.now() - this.cacheTimestamp) < 60 * 60 * 1000) { // 1 hora
-                return this.propertiesCache;
-            }
+            console.log(`📂 Procesando archivo: ${path.basename(this.currentDataFile)}`);
 
             // Procesar el archivo
             let rawData;
@@ -339,14 +353,16 @@ class IdealistaFtpService {
             // Procesar los datos crudos con parseProperties
             let normalizedData = this.parser.parseProperties(rawData);
 
+            // Actualizar caché
+            this.propertiesCache = normalizedData;
+            this.cacheTimestamp = Date.now();
+            console.log(`✅ Caché actualizado con ${normalizedData.properties?.length || 0} propiedades`);
+
             // Aplicar filtros si se proporcionan
             if (options && Object.keys(options).length > 0) {
                 normalizedData = this.parser.applyFilters(normalizedData, options);
             }
             
-            // Actualizar caché
-            this.propertiesCache = normalizedData;
-            this.cacheTimestamp = Date.now();
             return normalizedData;
 
         } catch (error) {

@@ -27,6 +27,16 @@ const applyPagination = (properties, page = 1, size = 50) => {
     };
 };
 
+// Función para crear timeout con Promise.race
+const withTimeout = (promise, timeoutMs) => {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => 
+            setTimeout(() => reject(new Error(`Timeout después de ${timeoutMs}ms`)), timeoutMs)
+        )
+    ]);
+};
+
 module.exports = async (req, res) => {
     // Manejar CORS
     if (!handleCors(req, res)) {
@@ -63,8 +73,14 @@ module.exports = async (req, res) => {
         // Obtener el servicio FTP
         const service = getFtpService();
         
-        // Obtener propiedades desde el sistema FTP
-        const ftpData = await service.getProperties(searchOptions);
+        // Timeout de 8 segundos para Vercel (límite de 10s)
+        const timeoutMs = 8000;
+        
+        // Obtener propiedades desde el sistema FTP con timeout
+        const ftpData = await withTimeout(
+            service.getProperties(searchOptions),
+            timeoutMs
+        );
         
         if (!ftpData || !ftpData.properties) {
             throw new Error('No se pudieron obtener datos del sistema FTP');
@@ -146,7 +162,9 @@ module.exports = async (req, res) => {
                 lastUpdated: new Date().toISOString(),
                 source: 'fallback-ftp-error'
             },
-            message: "Error conectando con sistema FTP de Idealista. Mostrando datos de ejemplo.",
+            message: error.message.includes('Timeout') 
+                ? "Timeout en sistema FTP de Idealista. Mostrando datos de ejemplo."
+                : "Error conectando con sistema FTP de Idealista. Mostrando datos de ejemplo.",
             error: error.message
         });
     }
