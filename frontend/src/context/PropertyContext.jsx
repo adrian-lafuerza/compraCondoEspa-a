@@ -102,12 +102,35 @@ export const PropertyProvider = ({ children }) => {
       setAttemptedPropertyIds(prev => new Set([...prev, normalizedId]));
 
       // Si no está en las propiedades cargadas y no se ha intentado antes, buscar directamente por ID
-      // Por defecto usar Contentful, solo usar Idealista si es Madrid
-      const response = await propertyService.getContentfulPropertyById(id);
-    
-      if (response.success && response.data) {
-        const foundProperty = response.data;
+      // Intentar primero con Idealista (Madrid), luego con Contentful (Costa del Sol, Costa Blanca)
+      let response;
+      let foundProperty = null;
+      
+      try {
+        // Primero intentar con Idealista (Madrid)
+        response = await propertyService.getPropertyById(id);
         
+        if (response.success && response.data) {
+          foundProperty = response.data;
+        }
+      } catch (idealistaError) {
+        console.log('Propiedad no encontrada en Idealista, intentando con Contentful...');
+      }
+      
+      // Si no se encontró en Idealista, intentar con Contentful
+      if (!foundProperty) {
+        try {
+          response = await propertyService.getContentfulPropertyById(id);
+          
+          if (response.success && response.data) {
+            foundProperty = response.data;
+          }
+        } catch (contentfulError) {
+          console.log('Propiedad no encontrada en Contentful');
+        }
+      }
+    
+      if (foundProperty) {
         setCurrentProperty(foundProperty);
         setError(null);
         

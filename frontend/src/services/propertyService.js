@@ -17,12 +17,12 @@ export const propertyService = {
         const queryParams = new URLSearchParams();
 
         // Agregar parámetros opcionales
-        if (params.limit) queryParams.append('limit', params.limit);
-        if (params.skip) queryParams.append('skip', params.skip);
-        if (params.order) queryParams.append('order', params.order);
+        if (params.page) queryParams.append('page', params.page);
+        if (params.size) queryParams.append('size', params.size);
+        if (params.state) queryParams.append('state', params.state);
 
         const queryString = queryParams.toString();
-        const url = `${API_BASE_URL}/contentful/properties`;
+        const url = `${API_BASE_URL}/contentful/properties${queryString ? `?${queryString}` : ''}`;
 
         const response = await fetch(url);
 
@@ -36,7 +36,8 @@ export const propertyService = {
           return {
             success: true,
             data: {
-              properties: data.data.properties
+              properties: data.data.properties,
+              pagination: data.data.pagination
             }
           };
         } else {
