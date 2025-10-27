@@ -246,15 +246,12 @@ const PropertiesPage = () => {
     // Scroll automático al top cuando se accede a la página
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    console.log('PropertiesPage: locationParam =', locationParam);
-    console.log('PropertiesPage: zoneParam =', zoneParam);
-    console.log('PropertiesPage: newPropertyParam =', newPropertyParam);
+
 
     // Crear una clave única para los parámetros actuales
     const currentParamsKey = `location:${locationParam || 'none'}-zone:${zoneParam || 'none'}-newProperty:${newPropertyParam || 'none'}`;
 
-    console.log('PropertiesPage useEffect: Parámetros actuales:', currentParamsKey);
-    console.log('PropertiesPage useEffect: Últimos parámetros:', lastSearchParams);
+    
 
     // Solo ejecutar si los parámetros han cambiado
     if (lastSearchParams === currentParamsKey) {
@@ -305,7 +302,7 @@ const PropertiesPage = () => {
       setTitle(propertyZone)
     } else if (properties.length === 0 && !hasAttemptedLoad) {
       // Si no hay parámetros, no hay propiedades cargadas y no se ha intentado cargar
-      console.log('PropertiesPage useEffect: Loading all properties');
+      
       functionsRef.current.loadProperties();
       setTitle('Todas las Propiedades');
     } else if (!locationParam && !zoneParam) {
@@ -416,11 +413,7 @@ const PropertiesPage = () => {
 
               {!loading && !error && (
                 <div className="space-y-4 lg:space-y-6">
-                  {(() => {
-                    console.log('Rendering properties. Filtered:', filteredProperties.length, 'Total:', properties.length);
-                    console.log('Loading:', loading, 'Error:', error);
-                    return null;
-                  })()}
+
                   {filteredProperties.length > 0 ? (
                     filteredProperties.map((property, index) => (
                       <PropertyCard key={`${property.propertyId}-${index}`} property={property} index={index} />

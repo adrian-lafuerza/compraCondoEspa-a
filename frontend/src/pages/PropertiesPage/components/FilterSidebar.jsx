@@ -35,7 +35,7 @@ const FilterSidebar = ({ localFilters, handleFilterChange, handleClearFilters })
     return '';
   };
 
-  console.log('searchParams', searchParams.get('newProperty'));
+  
 
 
   return (

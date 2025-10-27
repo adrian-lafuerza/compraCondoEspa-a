@@ -1038,7 +1038,7 @@ export const propertyService = {
                propertyAddress.toLowerCase().includes(mappedLocation.toLowerCase());
       });
 
-      console.log(`Propiedades filtradas para ${newProperty} en ${location}:`, filteredProperties.length);
+      
 
       return {
         success: true,

@@ -12,7 +12,7 @@ const PropertyCard = ({ property, index }) => {
     });
   };
 
-  console.log(property);
+
   
 
   return (

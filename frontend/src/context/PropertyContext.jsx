@@ -162,7 +162,7 @@ export const PropertyProvider = ({ children }) => {
 
       // Si la ubicación es Madrid, usar Idealista
       if (location && location.toLowerCase() === 'madrid') {
-        const response = await propertyService.getPropertiesByMadrid();
+        const response = await propertyService.getPropertiesByMadrid({ size: 100 });
         
         if (response && response.success && response.data) {
           // Verificar si response.data tiene properties directamente o si es un array

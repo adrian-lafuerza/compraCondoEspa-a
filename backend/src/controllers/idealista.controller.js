@@ -1,231 +1,49 @@
-// Controlador de Idealista con integración a la API real
-const axios = require('axios');
-const { getIdealistaToken } = require('../utils/idealistaAuth.middleware');
+/**
+ * Controlador de Idealista con integración al sistema FTP
+ * Reemplaza la integración con la API por descarga de archivos XML/JSON desde FTP
+ */
+const IdealistaFtpService = require('../services/idealistaFtp.service');
 const { redisCache, CacheKeys, CacheTTL } = require('../utils/nodeCache');
 
-// Map para almacenar promesas pendientes y evitar llamadas duplicadas
-const pendingRequests = new Map();
+// Instancia del servicio FTP
+const ftpService = new IdealistaFtpService();
 
-// Nota: La función getIdealistaToken ahora viene del middleware de autenticación
-// que maneja automáticamente el cache y renovación de tokens
-
-const getApiHeaders = async () => {
-    const token = await getIdealistaToken();
-
-    return {
-        feedKey: process.env.IDEALISTA_FEED_KEY,
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-    };
-}
-
-// Función para obtener imágenes de una propiedad específica
-const getPropertyImages = async (propertyId) => {
-    try {
-        console.log(`🖼️ Obteniendo imágenes para propiedad: ${propertyId}`);
-        
-        // Verificar que propertyId no sea undefined
-        if (!propertyId) {
-            console.error('❌ PropertyId es undefined o null');
-            return [];
-        }
-
-        // Verificar caché primero
-        const cacheKey = `${CacheKeys.IMAGES}:${propertyId}`;
-        const cachedImages = await redisCache.get(cacheKey);
-
-        if (cachedImages) {
-            console.log(`✅ Imágenes encontradas en caché: ${cachedImages.length} imágenes`);
-            return cachedImages;
-        }
-        
-        console.log(`🔍 Imágenes no encontradas en caché, consultando API...`);
-
-        // Si no está en caché, consultar API
-
-        const isSandbox = process.env.IDEALISTA_ENVIRONMENT !== 'production';
-        const baseUrl = isSandbox
-            ? 'https://partners-sandbox.idealista.com/'
-            : 'https://partners.idealista.com/';
-
-        const headers = await getApiHeaders();
-        const endpoint = `v1/properties/${propertyId}/images`;
-        const fullUrl = `${baseUrl}${endpoint}`;
-
-        const response = await axios.get(fullUrl, { headers });
-        console.log(`📡 Respuesta de API de imágenes - Status: ${response.status}`);
-
-        if (response.status === 200) {
-            // Extraer las imágenes de la respuesta
-            const images = response.data?.images || [];
-            console.log(`📸 Imágenes obtenidas de API: ${images.length} imágenes`);
-
-            // Guardar en caché
-            await redisCache.set(cacheKey, images, CacheTTL.IMAGES);
-            return images;
-        } else {
-            throw new Error(`Error obteniendo imágenes: ${response.status}`);
-        }
-    } catch (error) {
-        console.error(`Error obteniendo imágenes para propiedad ${propertyId}:`, error.message);
-        return []; // Devolver array vacío si no se pueden obtener imágenes
-    }
-};
-
-
-const searchIdealistaProperties = async (options = {}) => {
-    try {
-        // Crear clave de caché basada en los parámetros de búsqueda
-        const searchParams = {
-            page: options.page || 1,
-            size: options.size || 100,
-            state: options.state || 'active'
-        };
-
-        const cacheKey = `${CacheKeys.PROPERTIES}:${JSON.stringify(searchParams)}`;
-
-        // Verificar caché primero
-        const cachedData = await redisCache.get(cacheKey);
-        
-        if (cachedData) {
-            return cachedData;
-        }
-
-        // Verificar si ya hay una petición pendiente para esta clave
-        if (pendingRequests.has(cacheKey)) {
-            // Esperar a que termine la petición pendiente
-            return await pendingRequests.get(cacheKey);
-        }
-
-        // Crear promesa para la petición a la API
-        const apiPromise = (async () => {
-            try {
-                // Usar la API de Partners de Idealista
-                const isSandbox = process.env.IDEALISTA_ENVIRONMENT !== 'production';
-                const baseUrl = isSandbox
-                    ? 'https://partners-sandbox.idealista.com/'
-                    : 'https://partners.idealista.com/';
-
-                const headers = await getApiHeaders();
-
-                const endpoint = 'v1/properties';
-                const queryString = new URLSearchParams(searchParams).toString();
-                const fullUrl = `${baseUrl}${endpoint}?${queryString}`;
-
-                const response = await axios.get(fullUrl, {
-                    headers,
-                });
-
-                return response;
-            } finally {
-                // Limpiar la petición pendiente cuando termine
-                pendingRequests.delete(cacheKey);
-            }
-        })();
-
-        // Almacenar la promesa en el Map
-        pendingRequests.set(cacheKey, apiPromise.then(async (response) => {
-            console.log("esta aqui hizo la consulta", response.status);
-            
-            if (response.status === 200) {
-                // Enriquecer propiedades con imágenes
-                if (response.data && response.data.properties) {
-                    const enrichedProperties = await Promise.all(
-                        response.data.properties.map(async (property) => {
-                            const images = await getPropertyImages(property.propertyId);
-                            return {
-                                ...property,
-                                images: images || []
-                            };
-                        })
-                    );
-                    
-                    const enrichedData = {
-                        ...response.data,
-                        properties: enrichedProperties
-                    };
-                    
-                    // Guardar en caché
-                    await redisCache.set(cacheKey, enrichedData, CacheTTL.PROPERTIES);
-                    
-                    return enrichedData;
-                }
-                
-                return response.data;
-            } else {
-                throw new Error(`Error buscando propiedades: ${response.status}`);
-            }
-        }));
-
-        // Retornar el resultado de la promesa
-        return await pendingRequests.get(cacheKey);
-    } catch (error) {
-        // console.error('Error en searchIdealistaProperties:', error.message);
-        throw error;
-    }
-};
-
-// Controlador para obtener imágenes de una propiedad específica
-const getPropertyImagesController = async (req, res) => {
-    try {
-        const { propertyId } = req.params;
-
-        if (!propertyId) {
-            return res.status(400).json({
-                success: false,
-                message: "ID de propiedad requerido"
-            });
-        }
-
-        const images = await getPropertyImages(propertyId);
-
-        res.status(200).json({
-            success: true,
-            data: {
-                propertyId,
-                images
-            },
-            message: "Imágenes obtenidas exitosamente"
-        });
-
-    } catch (error) {
-        console.error('Error en getPropertyImagesController:', error);
-        res.status(500).json({
-            success: false,
-            message: "Error obteniendo imágenes de la propiedad",
-            error: error.message
-        });
-    }
-};
-
+/**
+ * Obtiene todas las propiedades con filtros opcionales
+ */
 const getProperties = async (req, res) => {
     try {
         // Extraer parámetros de búsqueda del request
-        const searchOptions = {
+        const filters = {
             page: parseInt(req.query.page) || 1,
-            size: parseInt(req.query.size) || 100,
+            size: parseInt(req.query.size) || 50,
+            propertyType: req.query.propertyType,
+            operation: req.query.operation || 'sale',
+            minPrice: req.query.minPrice,
+            maxPrice: req.query.maxPrice,
+            city: req.query.city,
             state: req.query.state || 'active'
         };
 
-        // Buscar propiedades en la API de Idealista
-        const idealistaData = await searchIdealistaProperties(searchOptions);
+        // Obtener propiedades del servicio FTP
+        const idealistaData = await ftpService.getProperties(filters);
 
-        // Respuesta exitosa con los datos de la API de Idealista
+        // Respuesta exitosa con los datos del FTP
         res.status(200).json({
             success: true,
             data: idealistaData,
-            message: "Propiedades obtenidas exitosamente desde Idealista API"
+            message: "Propiedades obtenidas exitosamente desde FTP de Idealista",
+            source: idealistaData.source || 'ftp'
         });
 
     } catch (error) {
-        console.error('Error en getProperties:', error);
+        console.error('❌ Error en getProperties:', error);
 
-        // Si hay error con la API de Idealista, devolver datos de fallback
-        const fallbackProperties = [
-            {
-                id: 'fallback-1',
-                title: "Propiedad de ejemplo - API no disponible",
+        // Datos de fallback en caso de error
+        const fallbackData = {
+            properties: [{
+                propertyId: 'fallback-1',
+                title: "Servicio FTP de Idealista no disponible",
                 price: 0,
                 currency: "EUR",
                 size: 0,
@@ -241,7 +59,7 @@ const getProperties = async (req, res) => {
                         longitude: -3.7038
                     }
                 },
-                description: "La API de Idealista no está disponible en este momento. Por favor, configure las credenciales correctas.",
+                description: "El servicio FTP de Idealista no está disponible en este momento. Por favor, verifique la configuración de conexión.",
                 features: [],
                 images: [],
                 propertyType: "homes",
@@ -250,32 +68,35 @@ const getProperties = async (req, res) => {
                 publishedDate: new Date().toISOString().split('T')[0],
                 contact: {
                     phone: null,
-                    email: null
-                }
-            }
-        ];
+                    email: null,
+                    name: null
+                },
+                status: 'active'
+            }],
+            total: 1,
+            totalPages: 1,
+            actualPage: 1,
+            itemsPerPage: 50,
+            lastUpdated: new Date().toISOString(),
+            source: 'fallback'
+        };
 
         res.status(200).json({
             success: false,
-            data: {
-                properties: fallbackProperties,
-                total: 1,
-                totalPages: 1,
-                actualPage: 1,
-                itemsPerPage: 50
-            },
-            message: "Error conectando con Idealista API. Mostrando datos de ejemplo.",
+            data: fallbackData,
+            message: "Error conectando con el servicio FTP de Idealista. Mostrando datos de ejemplo.",
             error: error.message
         });
     }
-}
+};
 
-// Función para buscar una propiedad específica por ID
+/**
+ * Obtiene una propiedad específica por ID
+ */
 const getPropertyById = async (req, res) => {
     const { propertyId } = req.params;
     
     try {
-        
         if (!propertyId) {
             return res.status(400).json({
                 success: false,
@@ -290,104 +111,17 @@ const getPropertyById = async (req, res) => {
         const cachedProperty = await redisCache.get(cacheKey);
         
         if (cachedProperty) {
-            console.log(`✅ Propiedad ${propertyId} encontrada en caché`);
-            
-            // Obtener imágenes de la propiedad
-            const images = await getPropertyImages(propertyId);
-            
             return res.status(200).json({
                 success: true,
-                data: {
-                    ...cachedProperty,
-                    images: images
-                },
+                data: cachedProperty,
                 message: `Property ${propertyId} found in cache`,
                 source: 'cache'
             });
         }
 
-        // Si no está en caché, buscar en todas las propiedades
-        console.log(`🔍 Propiedad no encontrada en caché, buscando en todas las propiedades...`);
+        // Obtener todas las propiedades y buscar la específica
         
-        const allPropertiesCacheKey = CacheKeys.PROPERTIES;
-        const allProperties = await redisCache.get(allPropertiesCacheKey);
-        
-        if (allProperties && allProperties.properties) {
-            const property = allProperties.properties.find(prop => 
-                prop.propertyId === propertyId || 
-                prop.propertyId === parseInt(propertyId) ||
-                prop.id === propertyId ||
-                prop.id === parseInt(propertyId)
-            );
-            
-            if (property) {
-                // Guardar en caché individual
-                await redisCache.set(cacheKey, property, CacheTTL.PROPERTIES);
-                
-                // Obtener imágenes de la propiedad
-                const images = await getPropertyImages(propertyId);
-                
-                console.log(`✅ Propiedad ${propertyId} encontrada en caché de todas las propiedades`);
-                return res.status(200).json({
-                    success: true,
-                    data: {
-                        ...property,
-                        images: images
-                    },
-                    message: `Property ${propertyId} found successfully`,
-                    source: 'all-properties-cache'
-                });
-            }
-        }
-
-        // Si no está en caché, buscar en la API de Idealista
-        console.log(`🔍 Buscando propiedad ${propertyId} en API de Idealista...`);
-        
-        try {
-            const headers = await getApiHeaders();
-            const isSandbox = process.env.IDEALISTA_ENVIRONMENT !== 'production';
-            const baseUrl = isSandbox
-                ? 'https://partners-sandbox.idealista.com/'
-                : 'https://partners.idealista.com/';
-
-            const response = await axios.get(`${baseUrl}v1/properties/${propertyId}`, {
-                headers
-            });
-
-            if (response.data && response.data.property) {
-                const property = response.data.property;
-                
-                // Obtener imágenes de la propiedad
-                const images = await getPropertyImages(propertyId);
-                
-                // Guardar en caché individual
-                await redisCache.set(cacheKey, property, CacheTTL.PROPERTIES);
-                
-                console.log(`✅ Propiedad ${propertyId} encontrada en API de Idealista`);
-                return res.status(200).json({
-                    success: true,
-                    data: {
-                        message: "Propiedad encontrada en Idealista",
-                        success: true,
-                        ...property,
-                        images: images
-                    }
-                });
-            }
-        } catch (apiError) {
-            console.error(`Error consultando API de Idealista para propiedad ${propertyId}:`, apiError.message);
-        }
-        
-        // Si no se encuentra con búsqueda específica, buscar en todas las propiedades como fallback
-        console.log(`🔍 Búsqueda específica fallida, buscando en todas las propiedades...`);
-        
-        const searchOptions = {
-            page: 1,
-            size: 1000,
-            state: 'active'
-        };
-        
-        const allPropertiesData = await searchIdealistaProperties(searchOptions);
+        const allPropertiesData = await ftpService.getProperties({ size: 10000 });
         
         if (allPropertiesData && allPropertiesData.properties) {
             const property = allPropertiesData.properties.find(prop => 
@@ -401,12 +135,11 @@ const getPropertyById = async (req, res) => {
                 // Guardar en caché individual
                 await redisCache.set(cacheKey, property, CacheTTL.PROPERTIES);
                 
-                console.log(`✅ Propiedad ${propertyId} encontrada en API`);
                 return res.status(200).json({
                     success: true,
                     data: property,
                     message: `Property ${propertyId} found successfully`,
-                    source: 'idealista-api'
+                    source: 'ftp'
                 });
             }
         }
@@ -418,13 +151,12 @@ const getPropertyById = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error en getPropertyById:', error);
+        console.error('❌ Error en getPropertyById:', error);
         
-        // Si hay error con la API de Idealista, devolver datos de ejemplo para la propiedad solicitada
+        // Datos de fallback para la propiedad específica
         const fallbackProperty = {
-            id: propertyId,
             propertyId: propertyId,
-            title: `Propiedad ${propertyId} - API no disponible`,
+            title: `Propiedad ${propertyId} - Servicio no disponible`,
             price: 350000,
             currency: "EUR",
             size: 85,
@@ -440,7 +172,7 @@ const getPropertyById = async (req, res) => {
                     longitude: -3.7038
                 }
             },
-            description: `Esta es una propiedad de ejemplo para el ID ${propertyId}. La API de Idealista no está disponible en este momento. Por favor, configure las credenciales correctas.`,
+            description: `Esta es una propiedad de ejemplo para el ID ${propertyId}. El servicio FTP de Idealista no está disponible en este momento.`,
             features: ["Ascensor", "Calefacción", "Aire acondicionado"],
             images: [],
             propertyType: "homes",
@@ -449,22 +181,180 @@ const getPropertyById = async (req, res) => {
             publishedDate: new Date().toISOString().split('T')[0],
             contact: {
                 phone: null,
-                email: null
-            }
+                email: null,
+                name: null
+            },
+            status: 'active'
         };
         
         return res.status(200).json({
             success: false,
             data: fallbackProperty,
-            message: `Error conectando con Idealista API. Mostrando datos de ejemplo para la propiedad ${propertyId}.`,
+            message: `Error conectando con el servicio FTP de Idealista. Mostrando datos de ejemplo para la propiedad ${propertyId}.`,
             error: error.message,
             source: 'fallback'
         });
     }
 };
 
+/**
+ * Obtiene imágenes de una propiedad específica
+ * Nota: Las imágenes ahora vienen incluidas en los datos del FTP
+ */
+const getPropertyImagesController = async (req, res) => {
+    try {
+        const { propertyId } = req.params;
+
+        if (!propertyId) {
+            return res.status(400).json({
+                success: false,
+                message: "ID de propiedad requerido"
+            });
+        }
+
+        console.log(`🖼️ Obteniendo imágenes para propiedad: ${propertyId}`);
+
+        // Verificar caché de imágenes primero
+        const cacheKey = `${CacheKeys.IMAGES}:${propertyId}`;
+        const cachedImages = await redisCache.get(cacheKey);
+
+        if (cachedImages) {
+            console.log(`✅ Imágenes encontradas en caché: ${cachedImages.length} imágenes`);
+            return res.status(200).json({
+                success: true,
+                data: {
+                    propertyId,
+                    images: cachedImages
+                },
+                message: "Imágenes obtenidas desde caché"
+            });
+        }
+
+        // Buscar la propiedad para obtener sus imágenes
+        const allPropertiesData = await ftpService.getProperties({ size: 10000 });
+        
+        if (allPropertiesData && allPropertiesData.properties) {
+            const property = allPropertiesData.properties.find(prop => 
+                prop.propertyId === propertyId || 
+                prop.propertyId === parseInt(propertyId) ||
+                prop.id === propertyId ||
+                prop.id === parseInt(propertyId)
+            );
+            
+            if (property && property.images) {
+                // Guardar imágenes en caché
+                await redisCache.set(cacheKey, property.images, CacheTTL.IMAGES);
+                
+                console.log(`✅ Imágenes obtenidas: ${property.images.length} imágenes`);
+                return res.status(200).json({
+                    success: true,
+                    data: {
+                        propertyId,
+                        images: property.images
+                    },
+                    message: "Imágenes obtenidas exitosamente"
+                });
+            }
+        }
+
+        // Si no se encuentran imágenes
+        console.log(`❌ No se encontraron imágenes para la propiedad ${propertyId}`);
+        res.status(200).json({
+            success: true,
+            data: {
+                propertyId,
+                images: []
+            },
+            message: "No se encontraron imágenes para esta propiedad"
+        });
+
+    } catch (error) {
+        console.error('❌ Error en getPropertyImagesController:', error);
+        res.status(500).json({
+            success: false,
+            message: "Error obteniendo imágenes de la propiedad",
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Fuerza la descarga de nuevos datos desde el FTP
+ */
+const refreshData = async (req, res) => {
+    try {
+        console.log('🔄 Forzando actualización de datos desde FTP...');
+        
+        // Limpiar caché
+        await redisCache.flush();
+        
+        // Forzar descarga de nuevos datos
+        const newData = await ftpService.downloadAndProcessLatestFile();
+        
+        if (newData) {
+            console.log(`✅ Datos actualizados: ${newData.properties.length} propiedades`);
+            res.status(200).json({
+                success: true,
+                data: {
+                    propertiesCount: newData.properties.length,
+                    lastUpdated: newData.lastUpdated
+                },
+                message: "Datos actualizados exitosamente desde FTP"
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                message: "Error actualizando datos desde FTP"
+            });
+        }
+
+    } catch (error) {
+        console.error('❌ Error en refreshData:', error);
+        res.status(500).json({
+            success: false,
+            message: "Error actualizando datos",
+            error: error.message
+        });
+    }
+};
+
+/**
+ * Obtiene el estado del servicio FTP
+ */
+const getServiceStatus = async (req, res) => {
+    try {
+        // Verificar si hay datos en caché
+        const hasCache = ftpService.cache.size > 0;
+        
+        // Verificar si hay archivos locales
+        const localFiles = await ftpService.getLocalFiles();
+        
+        res.status(200).json({
+            success: true,
+            data: {
+                ftpConnected: true, // Se verificará en la próxima conexión
+                cacheSize: ftpService.cache.size,
+                hasLocalFiles: localFiles.length > 0,
+                localFilesCount: localFiles.length,
+                lastCacheUpdate: hasCache ? 'Datos en caché disponibles' : 'Sin datos en caché'
+            },
+            message: "Estado del servicio FTP obtenido"
+        });
+
+    } catch (error) {
+        console.error('❌ Error en getServiceStatus:', error);
+        res.status(500).json({
+            success: false,
+            message: "Error obteniendo estado del servicio",
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     getProperties,
+    getPropertyById,
     getPropertyImagesController,
-    getPropertyById
+    refreshData,
+    getServiceStatus
 };

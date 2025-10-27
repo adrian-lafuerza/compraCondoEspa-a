@@ -1,5 +1,5 @@
 const BlogCard = ({ campaign, onClick }) => {
-  console.log(campaign);
+  
   
   const handleClick = () => {
     if (onClick) {

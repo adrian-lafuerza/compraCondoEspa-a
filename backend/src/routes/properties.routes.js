@@ -1,14 +1,12 @@
 const express = require('express');
-const { getProperties, getPropertyImagesController, getPropertyById } = require('../controllers/idealista.controller');
-const { idealistaAuth } = require('../utils/idealistaAuth.middleware');
+const { getProperties, getPropertyImagesController, getPropertyById, refreshData, getServiceStatus } = require('../controllers/idealista.controller');
 const { redisCache } = require('../utils/nodeCache');
 
 const router = express.Router();
 
-// Aplicar middleware de autenticación de Idealista a todas las rutas de propiedades
-router.use(idealistaAuth.middleware());
+// === RUTAS PRINCIPALES DE PROPIEDADES ===
 
-// Ruta para obtener propiedades (ahora con autenticación automática)
+// Ruta para obtener propiedades (ahora desde FTP)
 router.get('/properties', getProperties);
 
 // Ruta para obtener una propiedad específica por ID
@@ -17,24 +15,13 @@ router.get('/properties/:propertyId', getPropertyById);
 // Ruta para obtener imágenes de una propiedad específica
 router.get('/properties/:propertyId/images', getPropertyImagesController);
 
-// Ruta para verificar el estado de autenticación (útil para debugging)
-router.get('/auth/status', (req, res) => {
-    const cacheInfo = idealistaAuth.getCacheInfo();
-    res.json({
-        message: 'Estado de autenticación Idealista',
-        ...cacheInfo,
-        tokenPresent: !!req.idealistaToken
-    });
-});
+// === RUTAS DE GESTIÓN DEL SERVICIO FTP ===
 
-// Ruta para limpiar cache de token (útil para testing)
-router.post('/auth/clear-cache', (req, res) => {
-    idealistaAuth.clearCache();
-    res.json({
-        message: 'Cache de token limpiado exitosamente',
-        timestamp: new Date().toISOString()
-    });
-});
+// Ruta para verificar el estado del servicio FTP
+router.get('/ftp/status', getServiceStatus);
+
+// Ruta para forzar actualización de datos desde FTP
+router.post('/ftp/refresh', refreshData);
 
 // === RUTAS DE GESTIÓN DE CACHÉ ===
 

@@ -49,7 +49,6 @@ export const instagramService = {
   // Obtener todos los posts de Instagram
   async getAllPosts() {
     try {
-      // Validar configuración de Contentful
       if (!CONTENTFUL_SPACE_ID || !CONTENTFUL_ACCESS_TOKEN) {
         console.warn('⚠️ Contentful no configurado, usando datos de prueba');
         return mockInstagramData.filter(post => post.isActive).sort((a, b) => a.order - b.order);
@@ -85,8 +84,6 @@ export const instagramService = {
           updatedAt: item.sys.updatedAt
         };
       });
-
-      console.log(`✅ Se obtuvieron ${instagramPosts.length} posts de Instagram desde Contentful`);
 
       // Filtrar solo posts activos y ordenar por order
       const activePosts = instagramPosts
