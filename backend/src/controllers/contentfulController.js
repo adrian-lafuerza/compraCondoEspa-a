@@ -452,10 +452,9 @@ const getStories = async (req, res) => {
 
     // Procesar datos de stories
     const stories = response.data.items.map(item => {
-      // Procesar imágenes
+      // Procesar backgroundImage
       let backgroundImage = [];
-      let video = [];
-      if (item.fields.images && Array.isArray(item.fields.images)) {
+      if (item.fields.backgroundImage && Array.isArray(item.fields.backgroundImage)) {
         backgroundImage = item.fields.backgroundImage.map(imgRef => {
           // Buscar el asset en los includes
           const asset = response.data.includes?.Asset?.find(asset => asset.sys.id === imgRef.sys.id);
@@ -483,41 +482,43 @@ const getStories = async (req, res) => {
         }
       }
 
+      // Procesar video
+      let video = null;
       if (item.fields.video && Array.isArray(item.fields.video)) {
-        video = item.fields.video.map(videoRef => {
+        const videoAssets = item.fields.video.map(videoRef => {
           // Buscar el asset en los includes
           const asset = response.data.includes?.Asset?.find(asset => asset.sys.id === videoRef.sys.id);
           return {
             url: asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null,
             title: asset?.fields?.title,
             description: asset?.fields?.description,
-            width: asset?.fields?.file?.details?.image?.width,
-            height: asset?.fields?.file?.details?.image?.height,
+            contentType: asset?.fields?.file?.contentType,
             size: asset?.fields?.file?.details?.size
           };
-        }).filter(video => video.url); // Filtrar videos sin URL
+        }).filter(vid => vid.url); // Filtrar videos sin URL
+        
+        video = videoAssets[0] || null; // Tomar el primer video
       } else if (item.fields.video && item.fields.video.sys) {
         // Si es un solo video en lugar de array
         const asset = response.data.includes?.Asset?.find(asset => asset.sys.id === item.fields.video.sys.id);
         if (asset) {
-          video = [{  
+          video = {
             url: asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null,
             title: asset?.fields?.title,
             description: asset?.fields?.description,
-            width: asset?.fields?.file?.details?.image?.width,
-            height: asset?.fields?.file?.details?.image?.height,
+            contentType: asset?.fields?.file?.contentType,
             size: asset?.fields?.file?.details?.size
-          }];
+          };
         }
       }
-
 
       return {
         id: item.sys.id,
         name: item.fields.name || '',
         positionJob: item.fields.positionJob || '',
-        backgroundImage: backgroundImage[0]?.url,
-        video: item.fields.video || '',
+        backgroundImage: backgroundImage[0]?.url || null,
+        video: video?.url || null,
+        videoDetails: video, // Incluir detalles completos del video si es necesario
         createdAt: item.sys.createdAt,
         updatedAt: item.sys.updatedAt
       };
