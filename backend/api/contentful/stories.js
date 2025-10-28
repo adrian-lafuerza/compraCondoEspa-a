@@ -79,7 +79,7 @@ module.exports = async (req, res) => {
         name: item.fields.name || '',
         positionJob: item.fields.positionJob || '',
         backgroundImage: backgroundImage[0]?.url,
-        videoLink: item.fields.videoLink || '',
+        video: item.fields.video || '',
         createdAt: item.sys.createdAt,
         updatedAt: item.sys.updatedAt
       };
