@@ -44,70 +44,58 @@ module.exports = async (req, res) => {
 
     // Procesar datos de stories
     const stories = response.data.items.map(item => {
-      // Procesar imágenes
-      let backgroundImage = [];
-      let video = [];
+      // Procesar imágenes de fondo
+      let backgroundImage = null;
       if (item.fields.backgroundImage && Array.isArray(item.fields.backgroundImage)) {
-        backgroundImage = item.fields.backgroundImage.map(imgRef => {
-          // Buscar el asset en los includes
-          const asset = response.data.includes?.Asset?.find(asset => asset.sys.id === imgRef.sys.id);
-          return {
-            url: asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null,
-            title: asset?.fields?.title,
-            description: asset?.fields?.description,
-            width: asset?.fields?.file?.details?.image?.width,
-            height: asset?.fields?.file?.details?.image?.height,
-            size: asset?.fields?.file?.details?.size
-          };
-        }).filter(img => img.url); // Filtrar imágenes sin URL
+        const imgRef = item.fields.backgroundImage[0]; // Tomar la primera imagen
+        const asset = response.data.includes?.Asset?.find(asset => asset.sys.id === imgRef.sys.id);
+        if (asset) {
+          backgroundImage = asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null;
+        }
       } else if (item.fields.backgroundImage && item.fields.backgroundImage.sys) {
         // Si es una sola imagen en lugar de array
         const asset = response.data.includes?.Asset?.find(asset => asset.sys.id === item.fields.backgroundImage.sys.id);
         if (asset) {
-          backgroundImage = [{
-            url: asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null,
-            title: asset?.fields?.title,
-            description: asset?.fields?.description,
-            width: asset?.fields?.file?.details?.image?.width,
-            height: asset?.fields?.file?.details?.image?.height,
-            size: asset?.fields?.file?.details?.size
-          }];
+          backgroundImage = asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null;
         }
       }
 
+      // Procesar videos
+      let video = null;
+      let videoDetails = null;
       if (item.fields.video && Array.isArray(item.fields.video)) {
-        video = item.fields.video.map(videoRef => {
-          // Buscar el asset en los includes
-          const asset = response.data.includes?.Asset?.find(asset => asset.sys.id === videoRef.sys.id);
-          return {
-            url: asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null,
-            title: asset?.fields?.title,
-            description: asset?.fields?.description,
-            width: asset?.fields?.file?.details?.image?.width,
-            height: asset?.fields?.file?.details?.image?.height,
-            size: asset?.fields?.file?.details?.size
+        const videoRef = item.fields.video[0]; // Tomar el primer video
+        const asset = response.data.includes?.Asset?.find(asset => asset.sys.id === videoRef.sys.id);
+        if (asset) {
+          video = asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null;
+          videoDetails = {
+            url: video,
+            title: asset?.fields?.title || '',
+            contentType: asset?.fields?.file?.contentType || '',
+            size: asset?.fields?.file?.details?.size || 0
           };
-        }).filter(video => video.url); // Filtrar videos sin URL
+        }
       } else if (item.fields.video && item.fields.video.sys) {
         // Si es un solo video en lugar de array
         const asset = response.data.includes?.Asset?.find(asset => asset.sys.id === item.fields.video.sys.id);
         if (asset) {
-          video = [{
-            url: asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null,
-            title: asset?.fields?.title,
-            description: asset?.fields?.description,
-            width: asset?.fields?.file?.details?.image?.width,
-            height: asset?.fields?.file?.details?.image?.height,
-            size: asset?.fields?.file?.details?.size
-          }];
+          video = asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null;
+          videoDetails = {
+            url: video,
+            title: asset?.fields?.title || '',
+            contentType: asset?.fields?.file?.contentType || '',
+            size: asset?.fields?.file?.details?.size || 0
+          };
         }
       }
+
       return {
         id: item.sys.id,
         name: item.fields.name || '',
         positionJob: item.fields.positionJob || '',
-        backgroundImage: backgroundImage[0]?.url,
-        video: item.fields.video || '',
+        backgroundImage: backgroundImage,
+        video: video,
+        videoDetails: videoDetails,
         createdAt: item.sys.createdAt,
         updatedAt: item.sys.updatedAt
       };
