@@ -454,6 +454,7 @@ const getStories = async (req, res) => {
     const stories = response.data.items.map(item => {
       // Procesar imágenes
       let backgroundImage = [];
+      let video = [];
       if (item.fields.images && Array.isArray(item.fields.images)) {
         backgroundImage = item.fields.backgroundImage.map(imgRef => {
           // Buscar el asset en los includes
@@ -481,6 +482,35 @@ const getStories = async (req, res) => {
           }];
         }
       }
+
+      if (item.fields.video && Array.isArray(item.fields.video)) {
+        video = item.fields.video.map(videoRef => {
+          // Buscar el asset en los includes
+          const asset = response.data.includes?.Asset?.find(asset => asset.sys.id === videoRef.sys.id);
+          return {
+            url: asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null,
+            title: asset?.fields?.title,
+            description: asset?.fields?.description,
+            width: asset?.fields?.file?.details?.image?.width,
+            height: asset?.fields?.file?.details?.image?.height,
+            size: asset?.fields?.file?.details?.size
+          };
+        }).filter(video => video.url); // Filtrar videos sin URL
+      } else if (item.fields.video && item.fields.video.sys) {
+        // Si es un solo video en lugar de array
+        const asset = response.data.includes?.Asset?.find(asset => asset.sys.id === item.fields.video.sys.id);
+        if (asset) {
+          video = [{  
+            url: asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null,
+            title: asset?.fields?.title,
+            description: asset?.fields?.description,
+            width: asset?.fields?.file?.details?.image?.width,
+            height: asset?.fields?.file?.details?.image?.height,
+            size: asset?.fields?.file?.details?.size
+          }];
+        }
+      }
+
 
       return {
         id: item.sys.id,
