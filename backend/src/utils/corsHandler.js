@@ -5,8 +5,8 @@ const allowedOrigins = [
   'http://localhost:5175', 
   'http://localhost:3000',
   'https://localhost:5173',
-  'https://ruben-alfonso-wheat.vercel.app',
-  'https://compra-condo-espa-a.vercel.app'
+  'https://www.rubenalfonso.com',
+  'https://www.compracondoespana.com'
 ];
 
 /**
