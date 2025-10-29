@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 
-import StarIcon from '../../assets/Star.svg'
 import YoutubeButton from '../../assets/youtube-button.svg'
 
 
@@ -125,16 +124,16 @@ const OportunitiesSection = () => {
                                             {/* Logo RA en esquina superior izquierda */}
                                             <div className="absolute top-3 md:top-4 lg:top-6 left-3 md:left-4 lg:left-6 z-10">
                                                 <div className="text-white">
-                                                    <div className="text-lg md:text-xl lg:text-2xl font-bold">RA</div>
-                                                    <div className="text-xs opacity-80">RUBEN ALFONSO</div>
-                                                    <div className="text-xs opacity-60">REAL ESTATE GROUP</div>
+                                                    <div className="text-lg text-black md:text-xl lg:text-2xl font-bold">RA</div>
+                                                    <div className="text-xs text-black opacity-80">RUBEN ALFONSO</div>
+                                                    <div className="text-xs text-black opacity-60">REAL ESTATE GROUP</div>
                                                 </div>
                                             </div>
 
                                             {/* Imagen container con altura completa */}
                                             <div className="flex-1 relative bg-gray-800 overflow-hidden">
                                                 <img
-                                                    src={`${import.meta.env.BASE_URL}images/RUBEN FOTO 1.png`}
+                                                    src={`${import.meta.env.BASE_URL}images/RUBEN_PIC_3.png`}
                                                     alt="Ruben Alfonso"
                                                     className="w-full h-full object-cover"
                                                 />
